@@ -71,7 +71,6 @@ bool SingleServer::RecvFromClient()
         LogMsg(tempMsg.msg);
         return true;
     }
-
     else{
         LogMsg("Server Receive Msg Error");
         return false;

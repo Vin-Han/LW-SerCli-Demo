@@ -4,11 +4,31 @@
 #pragma comment(lib, "ws2_32.lib")  //加载 ws2_32.dll
 #pragma warning(disable:4996)
 
+#include "SingleClient.h"
 #include <windows.h>
 
 #define BUF_SIZE 100
 
 int main() {
+    //初始化DLL
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    SingleClient* client = new SingleClient("client");
+
+    while (1)
+    {
+        client->ConnectToServer();
+        client->SendToServer();
+        client->RecvFromServer();
+        client->CloseSocket();
+    }
+
+    WSACleanup();  //终止使用 DLL
+    return 0;
+}
+
+int oldmain() {
     //初始化DLL
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
