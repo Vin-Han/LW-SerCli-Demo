@@ -29,7 +29,7 @@ bool SingleClient::ConnectToServer()
 
 bool SingleClient::SendToServer()
 {
-    cout << "Input a string: " << endl;
+    cout << "Input a string: ";
     cin >> sendMsg->msg;
     sendMsg->msgLen = strlen(sendMsg->msg);
 
