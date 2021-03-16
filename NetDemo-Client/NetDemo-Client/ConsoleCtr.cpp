@@ -1,73 +1,99 @@
 #include "ConsoleCtr.h"
 
+ConsoleCtr* ConsoleCtr::clientConsole = nullptr;
+
 ConsoleCtr::ConsoleCtr()
 {
-	ifThreadOpen = false;
 	userInput = "";
-	inputHandlerList.clear();
+	inputOverHandlerList.clear();
 	buffer = nullptr;
+	ifKeepIO = false;
+	ifOpenIO = false;
+}
 
+ConsoleCtr* ConsoleCtr::GetInstance()
+{
+	if (clientConsole == nullptr) {
+		clientConsole = new ConsoleCtr();
+	}
+	return clientConsole;
 }
 
 ConsoleCtr::~ConsoleCtr()
 {
-
-}
-
-void ConsoleCtr::BeginThread()
-{
-	ifThreadOpen = true;
-	inputThread = new thread(ConsoleCtr::ThreadFunction);
-	inputThread->detach();
-
-	BufferPutput();
-}
-
-void ConsoleCtr::ThreadFunction()
-{
-}
-
-void ConsoleCtr::PlayerInput()
-{
-	while (1)
-	{
-		if (_kbhit()) {
-			char tempInput = (char) _getche();
-			InputCheck(tempInput);
-			userInput += tempInput;
-		}
+	if (clientConsole != nullptr) {
+		delete clientConsole;
 	}
 }
 
-void ConsoleCtr::BufferPutput()
+void ConsoleCtr::BeginIO()
 {
-	while (1)
-	{
-		if (buffer != nullptr) {
-			emptyContent = string(userInput.length(),' ');
-			cout << "\r" << emptyContent << "\r";
-			cout << buffer << endl;
-			cout << emptyContent;
-		}
-	}
+	ifKeepIO = true;
+	ifOpenIO = true;
+	userIOThread = new thread(ConsoleCtr::BeginThread);
+	userIOThread->detach();
 }
 
-void ConsoleCtr::addInputOverHandler(void (*handler)(string&))
+void ConsoleCtr::PauseIO()
 {
-	inputHandlerList.push_back(handler);
+	ifKeepIO = false;
 }
 
-void ConsoleCtr::SetBuffer(char* newBuffer)
+void ConsoleCtr::StopIO()
+{
+	ifOpenIO = false;
+}
+
+void ConsoleCtr::SetInput(char* newBuffer)
 {
 	buffer = newBuffer;
 }
 
-void ConsoleCtr::InputCheck(char input)
+const string ConsoleCtr::GetInput()
 {
-	if (input == '\n') {
-		for (void (*tempHandler)(string&) : inputHandlerList)
+	return userInput;
+}
+
+void ConsoleCtr::BeginThread()
+{
+	if (clientConsole != NULL) {
+		clientConsole->ServerClientIO();
+	}
+}
+
+void ConsoleCtr::ServerClientIO()
+{
+	while (ifOpenIO)
+	{
+		if (ifKeepIO) {
+			if (_kbhit()) {
+				char tempInput = (char)_getche();
+				InputCheck(tempInput);
+				userInput += tempInput;
+			}
+			if (buffer != nullptr) {
+				emptyContent = string(userInput.length(), ' ');
+				cout << "\r" << emptyContent << "\r";
+				cout << buffer << endl;
+				cout << emptyContent;
+				buffer = NULL;
+			}
+		}
+	}
+	return;
+}
+
+void ConsoleCtr::AddInputOverHandler(void (*handler)())
+{
+	inputOverHandlerList.push_back(handler);
+}
+
+void ConsoleCtr::InputCheck(const char& input)
+{
+	if (input == '\n' && inputOverHandlerList.size() > 0) {
+		for (void (*tempHandler)() : inputOverHandlerList)
 		{
-			tempHandler(userInput);
+			tempHandler();
 		}
 	}
 }

@@ -5,38 +5,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <thread>
 #include <vector>
+#include <thread>
 
 using namespace std;
 
 class ConsoleCtr
 {
-public:
+#pragma region singlemode function
+private:
 	ConsoleCtr();
+	static ConsoleCtr* clientConsole;
+public:
+	static ConsoleCtr* GetInstance();
 	~ConsoleCtr();
+#pragma endregion
+
+#pragma region common function
+public:
+	void BeginIO();
+
+	void PauseIO();
+
+	void StopIO();
+
+	void SetInput(char* newBuffer);
+
+	const string GetInput();
+
+	void AddInputOverHandler(void (*handler)());
+
+#pragma endregion
+
+
+#pragma region thread function
+private:
+	static void BeginThread();
+
+	void ServerClientIO();
+
+	void InputCheck(const char& input);
 
 private:
-	static void ThreadFunction();
-	
-	void PlayerInput();
+	thread* userIOThread;
 
-	void BeginThread();
+	bool ifKeepIO;
 
-	void InputCheck(char input);
-	
-	void BufferPutput();
+	bool ifOpenIO;
 
-	void addInputOverHandler( void (*handler)(string&));
+#pragma endregion
 
-	void SetBuffer(char* newBuffer);
+#pragma region properties
 
 private:
-	bool ifThreadOpen;
+
 	string userInput;
 	string emptyContent;
 	char* buffer;
-	thread* inputThread;
-	vector<void(*)(string&)> inputHandlerList;
-	static void (*threadFun)();
+	vector<void(*)()> inputOverHandlerList;
+#pragma endregion
+
+
+
+
+
 };

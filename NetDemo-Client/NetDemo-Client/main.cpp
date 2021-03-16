@@ -6,6 +6,7 @@
 
 #include "SingleClient.h"
 #include <windows.h>
+#include "ConsoleCtr.h"
 
 #define BUF_SIZE 100
 
@@ -15,6 +16,9 @@ int main() {
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     SingleClient* client = new SingleClient("client");
+
+    //ConsoleCtr* conCtr = ConsoleCtr::GetInstance();
+    //conCtr->BeginIO();
 
     while (1)
     {
