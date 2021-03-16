@@ -31,7 +31,7 @@ public:
 
 	void SetInput(char* newBuffer);
 
-	const string GetInput();
+	string GetInput();
 
 	void AddInputOverHandler(void (*handler)());
 

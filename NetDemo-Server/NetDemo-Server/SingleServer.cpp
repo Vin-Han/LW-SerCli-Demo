@@ -67,7 +67,7 @@ bool SingleServer::SendToClient()
 bool SingleServer::RecvFromClient()
 {
     tempMsg.msgLen = recv(clientSocket, tempMsg.msg, BUFFER_MAX_LENG, 0);
-    if (tempMsg.msgLen > 0) {
+    if (tempMsg.msgLen >= 0) {
         LogMsg(tempMsg.msg);
         return true;
     }

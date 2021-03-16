@@ -49,7 +49,7 @@ void ConsoleCtr::SetInput(char* newBuffer)
 	buffer = newBuffer;
 }
 
-const string ConsoleCtr::GetInput()
+string ConsoleCtr::GetInput()
 {
 	return userInput;
 }
@@ -90,7 +90,7 @@ void ConsoleCtr::AddInputOverHandler(void (*handler)())
 
 void ConsoleCtr::InputCheck(const char& input)
 {
-	if (input == '\n' && inputOverHandlerList.size() > 0) {
+	if (input == '\r' && inputOverHandlerList.size() > 0) {
 		for (void (*tempHandler)() : inputOverHandlerList)
 		{
 			tempHandler();

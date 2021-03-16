@@ -14,12 +14,16 @@ int main() {
     //³õÊ¼»¯DLL
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
+    
 
-    SingleClient* client = new SingleClient("client");
+    ConsoleCtr* conCtr = ConsoleCtr::GetInstance();
+    conCtr->BeginIO();
 
-    //ConsoleCtr* conCtr = ConsoleCtr::GetInstance();
-    //conCtr->BeginIO();
+    SingleClient* client = SingleClient::GetClientInstance();
 
+    
+
+    
     while (1)
     {
         client->ConnectToServer();

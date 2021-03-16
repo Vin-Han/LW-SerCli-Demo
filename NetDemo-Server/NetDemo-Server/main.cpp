@@ -13,7 +13,7 @@ int main() {
 
     SingleServer* server = new SingleServer(1);
 
-    server->BindServerToPort(1234);
+    server->BindServerToPort(1236);
 
     server->BeginToListen();
 
