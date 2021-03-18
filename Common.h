@@ -6,7 +6,8 @@
 #define LISTEN_MAX_LIST 10 
 #define BUFFER_MAX_LENG 100
 
-
+#define EMPTY_MESSAGE "bytedance_work"
+#define EMPTY_MESSAGE_LEN 14
 
 using namespace std;
 

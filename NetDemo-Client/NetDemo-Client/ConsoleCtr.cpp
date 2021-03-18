@@ -1,14 +1,18 @@
 #include "ConsoleCtr.h"
+#include <algorithm>
+#include <string>
 
 ConsoleCtr* ConsoleCtr::clientConsole = nullptr;
+bool ConsoleCtr::ifKeepIO = false;
+bool ConsoleCtr::ifOpenIO = false;
 
 ConsoleCtr::ConsoleCtr()
 {
 	userInput = "";
+	commandHand = "CMD:";
 	inputOverHandlerList.clear();
-	buffer = nullptr;
-	ifKeepIO = false;
-	ifOpenIO = false;
+	outputList.clear();
+	exitHandlerList.push_back(StopIO);
 }
 
 ConsoleCtr* ConsoleCtr::GetInstance()
@@ -34,26 +38,6 @@ void ConsoleCtr::BeginIO()
 	userIOThread->detach();
 }
 
-void ConsoleCtr::PauseIO()
-{
-	ifKeepIO = false;
-}
-
-void ConsoleCtr::StopIO()
-{
-	ifOpenIO = false;
-}
-
-void ConsoleCtr::SetInput(char* newBuffer)
-{
-	buffer = newBuffer;
-}
-
-string ConsoleCtr::GetInput()
-{
-	return userInput;
-}
-
 void ConsoleCtr::BeginThread()
 {
 	if (clientConsole != NULL) {
@@ -68,32 +52,57 @@ void ConsoleCtr::ServerClientIO()
 		if (ifKeepIO) {
 			if (_kbhit()) {
 				char tempInput = (char)_getche();
-				InputCheck(tempInput);
-				userInput += tempInput;
+				if(InputCheck(tempInput))
+					userInput += tempInput;
 			}
-			if (buffer != nullptr) {
+			if (ifRecvOver) {
 				emptyContent = string(userInput.length(), ' ');
 				cout << "\r" << emptyContent << "\r";
-				cout << buffer << endl;
+				for (const string& tempMsg : outputList)
+				{
+					cout << tempMsg << endl;
+				}
 				cout << emptyContent;
-				buffer = NULL;
+				outputList.clear();
+				ifRecvOver = false;
 			}
 		}
 	}
 	return;
 }
 
-void ConsoleCtr::AddInputOverHandler(void (*handler)())
-{
-	inputOverHandlerList.push_back(handler);
-}
 
-void ConsoleCtr::InputCheck(const char& input)
+bool ConsoleCtr::InputCheck(const char& input)
 {
 	if (input == '\r' && inputOverHandlerList.size() > 0) {
-		for (void (*tempHandler)() : inputOverHandlerList)
+		if (!CommandCheck()) {
+			for (void (*tempHandler)() : inputOverHandlerList)
+			{
+				tempHandler();
+			}
+		}
+		return false;
+	}
+	else if (input == 27 && exitHandlerList.size() > 0) {
+		for (void (*tempHandler)() : exitHandlerList)
 		{
 			tempHandler();
 		}
+		return false;
 	}
+	return true;
+}
+
+bool ConsoleCtr::CommandCheck()
+{
+	bool result = userInput.compare(0, commandHand.length(), commandHand);
+	if (result == true) {
+		string command = string(userInput, commandHand.length(), userInput.length());
+		transform(command.begin(), command.end(),command.begin(),::tolower);
+		ResetUserInput();
+		if (command == "exit") {
+			StopIO();
+		}
+	}
+	return result;
 }

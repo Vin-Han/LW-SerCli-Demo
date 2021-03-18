@@ -29,6 +29,23 @@ SingleClient::~SingleClient()
 {
 }
 
+void SingleClient::RecvOver()
+{
+    conSoleInstance->AddOutputMsg(msgList);
+    conSoleInstance->OutputMsgOver();
+}
+
+void SingleClient::BeginChatting()
+{
+    while (1)
+    {
+        ConnectToServer();
+        SendToServer();
+        RecvFromServer();
+        CloseSocket();
+    }
+}
+
 bool SingleClient::ConnectToServer()
 {
     clientSocket = new SOCKET(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP));
@@ -49,14 +66,8 @@ bool SingleClient::SendToServer()
     }
     else
     {
-        error = send(*clientSocket, "1", 1, 0);
+        error = send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
     }
-    /*
-    cout << "Input a string: ";
-    cin >> sendMsg->msg;
-    sendMsg->msgLen = strlen(sendMsg->msg);
-    int error = send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
-    */
     if (error != -1) {
         return true;
     }
@@ -69,16 +80,33 @@ bool SingleClient::SendToServer()
 bool SingleClient::RecvFromServer()
 {
     recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
-    if (recvMsg->msgLen >= 0) {
-        if (recvMsg->msgLen > 0) {
-            conSoleInstance->SetInput(recvMsg->msg);
+    if (recvMsg->msgLen = 0) {
+        return true;
+    }
+    else if (recvMsg->msgLen > 0)
+    {
+        int totalMsg = recvMsg->msgLen;
+        for (int i = 0; i < totalMsg; i++) {
+            recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
+            if (recvMsg->msgLen >= 0) {
+                if (recvMsg->msgLen > 0) {
+                    msgList.push_back(recvMsg->msg);
+
+                }
+            }
+            else {
+                LogMsg("Client Receive Msg Error");
+                return false;
+            }
         }
+        RecvOver();
         return true;
     }
     else {
         LogMsg("Client Receive Msg Error");
         return false;
     }
+
 }
 
 void SingleClient::CloseSocket()
@@ -92,7 +120,8 @@ bool SingleClient::CheckPlayerInput()
 {
     if (ifUserInputOver == true) {
         strcpy(sendMsg->msg, conSoleInstance->GetInput().c_str());
-        sendMsg->msgLen = conSoleInstance->GetInput().length() -1;
+        conSoleInstance->ResetUserInput();
+        sendMsg->msgLen = conSoleInstance->GetInput().length();
         ifUserInputOver = false;
         return true;
     }

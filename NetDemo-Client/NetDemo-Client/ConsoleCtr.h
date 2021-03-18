@@ -25,16 +25,28 @@ public:
 public:
 	void BeginIO();
 
-	void PauseIO();
+	inline void PauseIO(){ ifKeepIO = false; }
 
-	void StopIO();
+	static void StopIO(){ ifOpenIO = false; }
 
-	void SetInput(char* newBuffer);
+	inline const string GetInput(){ return userInput; }
 
-	string GetInput();
+	inline void ResetUserInput() { userInput = ""; }
 
-	void AddInputOverHandler(void (*handler)());
+#pragma endregion
 
+#pragma region handler function
+public:
+	bool InputCheck(const char& input);
+	bool CommandCheck();
+
+	inline void AddInputOverHandler(void (*handler)()) { inputOverHandlerList.push_back(handler); }
+	inline void AddExitHandler(void (*handler)()) { inputOverHandlerList.push_back(handler); }
+
+private:
+	string commandHand;
+	vector<void(*)()> inputOverHandlerList;
+	vector<void(*)()> exitHandlerList;
 #pragma endregion
 
 
@@ -44,25 +56,30 @@ private:
 
 	void ServerClientIO();
 
-	void InputCheck(const char& input);
-
 private:
 	thread* userIOThread;
 
-	bool ifKeepIO;
+	static bool ifKeepIO;
 
-	bool ifOpenIO;
+	static bool ifOpenIO;
 
 #pragma endregion
 
 #pragma region properties
-
 private:
-
 	string userInput;
 	string emptyContent;
-	char* buffer;
-	vector<void(*)()> inputOverHandlerList;
+
+#pragma endregion
+#pragma region output function
+private:
+	bool ifRecvOver;
+
+public:
+	vector<string> outputList;
+	void AddOutputMsg(vector<string>& msgList) { outputList = msgList; }
+	inline void OutputMsgOver() { ifRecvOver = true; }
+
 #pragma endregion
 
 

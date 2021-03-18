@@ -11,28 +11,17 @@
 #define BUF_SIZE 100
 
 int main() {
-    //初始化DLL
+
     WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-    
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     ConsoleCtr* conCtr = ConsoleCtr::GetInstance();
     conCtr->BeginIO();
 
     SingleClient* client = SingleClient::GetClientInstance();
+    client->BeginChatting();
 
-    
-
-    
-    while (1)
-    {
-        client->ConnectToServer();
-        client->SendToServer();
-        client->RecvFromServer();
-        client->CloseSocket();
-    }
-
-    WSACleanup();  //终止使用 DLL
+    WSACleanup();
     return 0;
 }
 
