@@ -2,11 +2,11 @@
 
 #include <iostream>
 #include <conio.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
+#include <winsock2.h>
 #include <vector>
 #include <thread>
+#include <mutex>
+#include "../../Common.h"
 
 using namespace std;
 
@@ -44,7 +44,6 @@ public:
 	inline void AddExitHandler(void (*handler)()) { inputOverHandlerList.push_back(handler); }
 
 private:
-	string commandHand;
 	vector<void(*)()> inputOverHandlerList;
 	vector<void(*)()> exitHandlerList;
 #pragma endregion
@@ -57,6 +56,8 @@ private:
 	void ServerClientIO();
 
 private:
+	mutex* msgMutex;
+
 	thread* userIOThread;
 
 	static bool ifKeepIO;
@@ -74,10 +75,11 @@ private:
 #pragma region output function
 private:
 	bool ifRecvOver;
-
-public:
 	vector<string> outputList;
-	void AddOutputMsg(vector<string>& msgList) { outputList = msgList; }
+public:
+
+	void AddOutputMsg(vector<string>& msgList);
+	void OutputMsg();
 	inline void OutputMsgOver() { ifRecvOver = true; }
 
 #pragma endregion

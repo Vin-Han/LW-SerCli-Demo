@@ -68,7 +68,9 @@ bool SingleServer::RecvFromClient()
 {
     tempMsg.msgLen = recv(clientSocket, tempMsg.msg, BUFFER_MAX_LENG, 0);
     if (tempMsg.msgLen >= 0) {
-        LogMsg(tempMsg.msg);
+        if (RecvMsgCheck()) {
+            LogMsg(tempMsg.msg);
+        }
         return true;
     }
     else{
@@ -80,5 +82,14 @@ bool SingleServer::RecvFromClient()
 void SingleServer::CloseClientSocket()
 {
     closesocket(clientSocket); 
+}
+ 
+bool SingleServer::RecvMsgCheck()
+{
+    if (tempMsg.msgLen == EMPTY_MESSAGE_LEN && 
+        string(EMPTY_MESSAGE).compare(0, EMPTY_MESSAGE_LEN-1, tempMsg.msg)) {
+        return false;
+    }
+    return true;
 }
 

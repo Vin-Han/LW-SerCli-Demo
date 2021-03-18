@@ -31,8 +31,10 @@ SingleClient::~SingleClient()
 
 void SingleClient::RecvOver()
 {
-    conSoleInstance->AddOutputMsg(msgList);
-    conSoleInstance->OutputMsgOver();
+    if (msgList.size() == 0) {
+        conSoleInstance->AddOutputMsg(msgList);
+        conSoleInstance->OutputMsgOver();
+    }
 }
 
 void SingleClient::BeginChatting()
@@ -64,8 +66,7 @@ bool SingleClient::SendToServer()
     if (CheckPlayerInput()) {
         error = send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
     }
-    else
-    {
+    else{
         error = send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
     }
     if (error != -1) {
@@ -80,18 +81,16 @@ bool SingleClient::SendToServer()
 bool SingleClient::RecvFromServer()
 {
     recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
-    if (recvMsg->msgLen = 0) {
+    if (recvMsg->msgLen == 0) {
         return true;
     }
-    else if (recvMsg->msgLen > 0)
-    {
+    else if (recvMsg->msgLen > 0){
         int totalMsg = recvMsg->msgLen;
         for (int i = 0; i < totalMsg; i++) {
             recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
             if (recvMsg->msgLen >= 0) {
                 if (recvMsg->msgLen > 0) {
                     msgList.push_back(recvMsg->msg);
-
                 }
             }
             else {

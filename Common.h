@@ -9,6 +9,11 @@
 #define EMPTY_MESSAGE "bytedance_work"
 #define EMPTY_MESSAGE_LEN 14
 
+#define CMD_HEAD "cmd:"
+#define CMD_HEAD_LEN 4
+
+
+
 using namespace std;
 
 static int SOCKET_ADDR_LENGTH = sizeof(SOCKADDR);

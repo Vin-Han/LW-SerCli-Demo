@@ -29,5 +29,7 @@ public:
 
 	void CloseClientSocket();
 
+private:
+	bool RecvMsgCheck();
 };
 
