@@ -1,23 +1,24 @@
 #include "SingleClient.h"
+#include "../../Common.h"
+#include "MsgCheckPoint.h"
 
 SingleClient* SingleClient::singleClient = nullptr;
-bool SingleClient::ifUserInputOver = false;
 
-SingleClient::SingleClient()
+
+SingleClient::SingleClient(char* IPAddr, int port)
 {
     memset(&serverAddr, 0, sizeof(serverAddr));  //每个字节都用0填充
     serverAddr.sin_family = PF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serverAddr.sin_port = htons(1236);
+    serverAddr.sin_addr.s_addr = inet_addr(IPAddr);
+    serverAddr.sin_port = htons(port);
 
-    sendMsg = new Msg();
     recvMsg = new Msg();
+    sendMsg = new Msg();
 
-    conSoleInstance = ConsoleCtr::GetInstance();
-    conSoleInstance->AddInputOverHandler(InputOver_Handler);
+    MsgMachine = MsgCheckPoint::GetInstence();
 }
 
-SingleClient* SingleClient::GetClientInstance()
+SingleClient* SingleClient::GetClientInstance(char* IPAddr, int port)
 {
     if (singleClient == nullptr) {
         singleClient = new SingleClient();
@@ -29,13 +30,6 @@ SingleClient::~SingleClient()
 {
 }
 
-void SingleClient::RecvOver()
-{
-    if (msgList.size() == 0) {
-        conSoleInstance->AddOutputMsg(msgList);
-        conSoleInstance->OutputMsgOver();
-    }
-}
 
 void SingleClient::BeginChatting()
 {
@@ -63,7 +57,7 @@ bool SingleClient::ConnectToServer()
 bool SingleClient::SendToServer()
 {
     int error;
-    if (CheckPlayerInput()) {
+    if (sendMsg->msgLen > 0) {
         error = send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
     }
     else{
@@ -82,30 +76,21 @@ bool SingleClient::RecvFromServer()
 {
     recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
     if (recvMsg->msgLen == 0) {
-        return true;
-    }
-    else if (recvMsg->msgLen > 0){
-        int totalMsg = recvMsg->msgLen;
-        for (int i = 0; i < totalMsg; i++) {
-            recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
-            if (recvMsg->msgLen >= 0) {
-                if (recvMsg->msgLen > 0) {
-                    msgList.push_back(recvMsg->msg);
-                }
-            }
-            else {
-                LogMsg("Client Receive Msg Error");
-                return false;
-            }
-        }
-        RecvOver();
-        return true;
-    }
-    else {
         LogMsg("Client Receive Msg Error");
         return false;
     }
 
+    int recvTimes = MsgMachine->ClientToClient(recvMsg->msg);
+    for (int i = 0; i < recvTimes; i++)
+    {
+        recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
+        if (recvMsg->msgLen == 0) {
+            LogMsg("Client Receive Msg Error");
+            return false;
+        }
+        MsgMachine->ClientToConsole(recvMsg->msg);
+    }
+    return true;
 }
 
 void SingleClient::CloseSocket()
@@ -113,16 +98,4 @@ void SingleClient::CloseSocket()
     memset(sendMsg->msg, 0, BUFFER_MAX_LENG);
     memset(recvMsg->msg, 0, BUFFER_MAX_LENG);
     closesocket(*clientSocket);
-}
-
-bool SingleClient::CheckPlayerInput()
-{
-    if (ifUserInputOver == true) {
-        strcpy(sendMsg->msg, conSoleInstance->GetInput().c_str());
-        conSoleInstance->ResetUserInput();
-        sendMsg->msgLen = conSoleInstance->GetInput().length();
-        ifUserInputOver = false;
-        return true;
-    }
-    return false;
 }

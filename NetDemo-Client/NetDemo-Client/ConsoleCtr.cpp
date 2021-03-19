@@ -1,18 +1,21 @@
 #include "ConsoleCtr.h"
+
+#include "MsgCheckPoint.h"
+#include "../../Common.h"
+
+#include <conio.h>
 #include <algorithm>
 #include <string>
 
 ConsoleCtr* ConsoleCtr::clientConsole = nullptr;
-bool ConsoleCtr::ifKeepIO = false;
-bool ConsoleCtr::ifOpenIO = false;
 
 ConsoleCtr::ConsoleCtr()
 {
 	userInput = "";
-	inputOverHandlerList.clear();
-	outputList.clear();
-	exitHandlerList.push_back(StopIO);
-	ifRecvOver = false;
+}
+
+ConsoleCtr::~ConsoleCtr()
+{
 
 }
 
@@ -24,107 +27,56 @@ ConsoleCtr* ConsoleCtr::GetInstance()
 	return clientConsole;
 }
 
-ConsoleCtr::~ConsoleCtr()
+//--------------------------------------------------------------------------------------------//
+void ConsoleCtr::BeginInputThread()
 {
-	if (clientConsole != nullptr) {
-		delete clientConsole;
-	}
+	ifReceiveInput = true;
+	msgCheck = MsgCheckPoint::GetInstence();
+	inputThread = new thread(BuildThread);
+	inputThread->detach();
 }
 
-void ConsoleCtr::BeginIO()
+void ConsoleCtr::CloseInputThread()
 {
-	ifKeepIO = true;
-	ifOpenIO = true;
-	userIOThread = new thread(ConsoleCtr::BeginThread);
-	userIOThread->detach();
-	msgMutex = new mutex();
+	ifReceiveInput = false;
 }
 
-void ConsoleCtr::BeginThread()
+void ConsoleCtr::BuildThread()
 {
-	if (clientConsole != NULL) {
-		clientConsole->ServerClientIO();
-	}
+	ConsoleCtr::GetInstance()->PutMessageToConsole();
+	return;
 }
 
-void ConsoleCtr::ServerClientIO()
+//--------------------------------------------------------------------------------------------//
+void ConsoleCtr::PutMessageToConsole()
 {
-	while (ifOpenIO)
+	while (ifReceiveInput)
 	{
-		if (ifKeepIO) {
-			if (_kbhit()) {
-				char tempInput = (char)_getche();
-				if(InputCheck(tempInput))
-					userInput += tempInput;
-			}
-			if (ifRecvOver) {
-				emptyContent = string(userInput.length(), ' ');
-				cout << "\r" << emptyContent << "\r";
-				OutputMsg();
-				cout << userInput;
-			}
+		if (_kbhit()) {
+			getline(cin, userInput);
+			msgCheck->ConsoleToClient(userInput);
+			ClearUserInput();
+		}
+		while (MsgList.size() > 0)
+		{
+			cout << MsgList.front() << "\n";
+			MsgList.pop_front();
 		}
 	}
 	return;
 }
 
-void ConsoleCtr::AddOutputMsg(vector<string>& msgList)
+//--------------------------------------------------------------------------------------------//
+void ConsoleCtr::ClearUserInput()
 {
-	msgMutex->lock(); 
-	outputList = msgList; 
-	msgMutex->unlock();
+	SetCursorToLastLine();
+	cout << string(" ", userInput.size()) << "\r";
 }
 
-void ConsoleCtr::OutputMsg()
+void ConsoleCtr::SetCursorToLastLine()
 {
-	msgMutex->lock();
-	for (const string& tempMsg : outputList)
-	{
-		cout << tempMsg << endl;
-	}
-	outputList.clear();
-	ifRecvOver = false;
-	msgMutex->unlock();
+	int X, Y;
+	GetConsoleXY(X, Y);
+	SetConSoleXY(0, Y - 1);
 }
 
-
-bool ConsoleCtr::InputCheck(const char& input)
-{
-	if (input == 8) {
-		if (userInput.length() > 0) {
-			userInput.pop_back();
-		}
-		return false;
-	}
-	else if (input == '\r' && inputOverHandlerList.size() > 0) {
-		if (!CommandCheck()) {
-			for (void (*tempHandler)() : inputOverHandlerList)
-			{
-				tempHandler();
-			}
-		}
-		return false;
-	}
-	else if (input == 27 && exitHandlerList.size() > 0) {
-		for (void (*tempHandler)() : exitHandlerList)
-		{
-			tempHandler();
-		}
-		return false;
-	}
-	return true;
-}
-
-bool ConsoleCtr::CommandCheck()
-{
-	bool result = userInput.compare(0, CMD_HEAD_LEN - 1, CMD_HEAD);
-	if (result == true) {
-		string command = string(userInput, CMD_HEAD_LEN, userInput.length());
-		transform(command.begin(), command.end(),command.begin(),::tolower);
-		ResetUserInput();
-		if (command == "exit") {
-			StopIO();
-		}
-	}
-	return result;
-}

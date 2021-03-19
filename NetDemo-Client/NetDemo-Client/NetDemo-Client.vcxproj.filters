@@ -24,6 +24,9 @@
     <ClCompile Include="ConsoleCtr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MsgCheckPoint.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SingleClient.h">
@@ -33,6 +36,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ConsoleCtr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgCheckPoint.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

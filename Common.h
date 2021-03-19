@@ -36,6 +36,38 @@ public:
 	}
 };
 
+#pragma region string enpand function
+
+#pragma endregion
+
+static bool StringBeginWith(const std::string& origin, const std::string& head) {
+	return (!origin.compare(0, head.length(), head));
+}
+
+static bool StringEndWith(const std::string& origin, const std::string& tail) {
+	if (origin.length() >= tail.length()) {
+		return (0 == origin.compare(origin.length() - tail.length(), tail.length(), tail));
+	}
+	return false;
+}
+
+static void GetConsoleXY(int& X, int& Y)
+{
+	CONSOLE_SCREEN_BUFFER_INFO bufferInfor;
+	HANDLE cursorInfor = GetStdHandle(STD_OUTPUT_HANDLE);
+	GetConsoleScreenBufferInfo(cursorInfor, &bufferInfor);
+	X = bufferInfor.dwCursorPosition.X;
+	Y = bufferInfor.dwCursorPosition.Y;
+}
+
+static void SetConSoleXY(int X, int Y)
+{
+	COORD cursorPos = { X,Y };
+	HANDLE cursorInfor = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(cursorInfor, cursorPos);
+}
+
+
 
 /*
 bind ·µ»ØÖµ

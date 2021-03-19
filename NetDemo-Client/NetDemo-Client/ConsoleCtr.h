@@ -1,14 +1,11 @@
 #pragma once
 
 #include <iostream>
-#include <conio.h>
-#include <winsock2.h>
-#include <vector>
+#include <deque>
 #include <thread>
-#include <mutex>
-#include "../../Common.h"
-
 using namespace std;
+
+class MsgCheckPoint;
 
 class ConsoleCtr
 {
@@ -21,71 +18,33 @@ public:
 	~ConsoleCtr();
 #pragma endregion
 
-#pragma region common function
+#pragma region input thread
 public:
-	void BeginIO();
+	void BeginInputThread();
+	void CloseInputThread();
+private:
+	thread* inputThread;
+	bool ifReceiveInput;
 
-	inline void PauseIO(){ ifKeepIO = false; }
-
-	static void StopIO(){ ifOpenIO = false; }
-
-	inline const string GetInput(){ return userInput; }
-
-	inline void ResetUserInput() { userInput = ""; }
+	static void BuildThread();
 
 #pragma endregion
 
-#pragma region handler function
+#pragma region UserInput function
 public:
-	bool InputCheck(const char& input);
-	bool CommandCheck();
+	deque<string> MsgList;
 
-	inline void AddInputOverHandler(void (*handler)()) { inputOverHandlerList.push_back(handler); }
-	inline void AddExitHandler(void (*handler)()) { inputOverHandlerList.push_back(handler); }
-
-private:
-	vector<void(*)()> inputOverHandlerList;
-	vector<void(*)()> exitHandlerList;
-#pragma endregion
-
-
-#pragma region thread function
-private:
-	static void BeginThread();
-
-	void ServerClientIO();
-
-private:
-	mutex* msgMutex;
-
-	thread* userIOThread;
-
-	static bool ifKeepIO;
-
-	static bool ifOpenIO;
-
-#pragma endregion
-
-#pragma region properties
 private:
 	string userInput;
-	string emptyContent;
+	MsgCheckPoint* msgCheck;
 
+	void PutMessageToConsole();
 #pragma endregion
-#pragma region output function
+
+#pragma region console controller function
 private:
-	bool ifRecvOver;
-	vector<string> outputList;
-public:
-
-	void AddOutputMsg(vector<string>& msgList);
-	void OutputMsg();
-	inline void OutputMsgOver() { ifRecvOver = true; }
-
+	void ClearUserInput();
+	void SetCursorToLastLine();
 #pragma endregion
-
-
-
-
 
 };

@@ -1,30 +1,28 @@
 #pragma once
-#include "../../Common.h"
+
 #include <winsock2.h>
 #include "ConsoleCtr.h"
 #include <vector>
 
+class Msg;
+class MsgCheckPoint;
+
 class SingleClient
 {
 private:
-	SingleClient();
+	SingleClient(char* IPAddr = nullptr, int port = 0);
 	static SingleClient* singleClient;
 public:
-	static SingleClient* GetClientInstance();
+	static SingleClient* GetClientInstance(char* IPAddr = nullptr,int port = 0);
 	~SingleClient();
 
 private:
 	sockaddr_in serverAddr;
-	ConsoleCtr* conSoleInstance;
 	SOCKET* clientSocket;
-	Msg* sendMsg;
 	Msg* recvMsg;
-	vector<string> msgList;
-	void RecvOver();
+	MsgCheckPoint* MsgMachine;
 public:
-
-	static inline void InputOver_Handler(){ ifUserInputOver = true; }
-	static bool ifUserInputOver;
+	Msg* sendMsg;
 
 	void BeginChatting();
 
@@ -35,6 +33,4 @@ public:
 	bool RecvFromServer();
 
 	void CloseSocket();
-
-	bool CheckPlayerInput();
 };
