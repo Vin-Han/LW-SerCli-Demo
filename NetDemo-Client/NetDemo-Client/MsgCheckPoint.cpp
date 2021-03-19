@@ -6,7 +6,6 @@
 
 MsgCheckPoint* MsgCheckPoint::singleMsgCheck = nullptr;
 
-
 MsgCheckPoint* MsgCheckPoint::GetInstence()
 {
 	if (singleMsgCheck == nullptr) {
@@ -17,17 +16,41 @@ MsgCheckPoint* MsgCheckPoint::GetInstence()
 
 void MsgCheckPoint::ConsoleToClient(const string& Msg)
 {
-	console->MsgList.push_back(Msg);
+	if (UserInputCheck(Msg)) {
+		strcpy(client->sendMsg->msg, Msg.c_str());
+		client->sendMsg->msgLen = Msg.size();
+	}
 }
 
 void MsgCheckPoint::ClientToConsole(const string& Msg)
 {
-	strcpy(client->sendMsg->msg, Msg.c_str());
-	client->sendMsg->msgLen = Msg.size();
+	ServerMsgCheck(Msg);
+	console->MsgList.push_back(Msg);
+
 }
 
-int MsgCheckPoint::ClientToClient(const string& Msg)
+int MsgCheckPoint::ClientToClient(char *Msg)
 {
-	return 0;
+	return atoi(Msg);
+}
+
+bool MsgCheckPoint::UserInputCheck(const string& Msg)
+{
+	if (StringBeginWith(Msg,CMD_HEAD)) {
+		string cmd = string(Msg,CMD_HEAD_LEN, Msg.size());
+		if (cmd == "") {
+			
+		}
+		return false;
+	}
+	return true;
+}
+
+void MsgCheckPoint::ServerMsgCheck(const string& Msg)
+{
+}
+
+void MsgCheckPoint::CMDMsgCheck(const string& Msg)
+{
 }
 

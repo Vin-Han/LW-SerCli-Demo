@@ -9,13 +9,16 @@ class MsgCheckPoint;
 
 class SingleClient
 {
+#pragma region single mode function
 private:
 	SingleClient(char* IPAddr = nullptr, int port = 0);
 	static SingleClient* singleClient;
 public:
-	static SingleClient* GetClientInstance(char* IPAddr = nullptr,int port = 0);
+	static SingleClient* GetClientInstance(char* IPAddr = nullptr, int port = 0);
 	~SingleClient();
+#pragma endregion
 
+#pragma region normal connect
 private:
 	sockaddr_in serverAddr;
 	SOCKET* clientSocket;
@@ -29,8 +32,22 @@ public:
 	bool ConnectToServer();
 
 	bool SendToServer();
-	
+
 	bool RecvFromServer();
 
 	void CloseSocket();
+#pragma endregion
+
+#pragma region set Name
+public:
+	void UserLogin();
+
+private:
+	int userID;
+	string userName;
+	void SetUserName();
+	int GetUserID();
+#pragma endregion
+
+
 };

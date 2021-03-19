@@ -12,7 +12,8 @@
 #define CMD_HEAD "cmd:"
 #define CMD_HEAD_LEN 4
 
-
+#define USER_LOGIN "new_user_login"
+#define USER_LOGIN_LEN 14
 
 using namespace std;
 
@@ -25,13 +26,13 @@ static void LogMsg(string Msg) {
 class Msg {
 public:
 	~Msg() {
-		delete[] msg;
+		
 	}
 public:
 	char  msg[BUFFER_MAX_LENG] = { 0 };
 	int   msgLen = 0;
 	void ClearMsg() {
-		msg[BUFFER_MAX_LENG] = { 0 };
+		memset(msg, 0, BUFFER_MAX_LENG);
 		msgLen = 0;
 	}
 };

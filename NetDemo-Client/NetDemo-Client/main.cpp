@@ -12,12 +12,13 @@ int main() {
 
 
     ConsoleCtr* console = ConsoleCtr::GetInstance();
-    SingleClient* client = SingleClient::GetClientInstance(IP,1234);
+    SingleClient* client = SingleClient::GetClientInstance(IP,1236);
     MsgCheckPoint* msgMAchine = MsgCheckPoint::GetInstence();
 
     msgMAchine->SetClient(client);
     msgMAchine->SetConsole(console);
 
+    client->UserLogin();
     console->BeginInputThread();
     client->BeginChatting();
 

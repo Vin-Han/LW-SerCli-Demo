@@ -1,6 +1,8 @@
 #pragma once
 #include "../../Common.h"
 #include <winsock2.h>
+#include <vector>
+#include <map>
 
 class SingleServer
 {
@@ -15,6 +17,8 @@ private:
 
 	SOCKET clientSocket;
 	Msg tempMsg;
+
+	vector<string> msgList;
 
 public:
 	bool BindServerToPort(int port);
@@ -31,5 +35,12 @@ public:
 
 private:
 	bool RecvMsgCheck();
+
+
+
+private:
+	map<string, int> userList;
+	int userCount;
+	void AddNewUser();
 };
 

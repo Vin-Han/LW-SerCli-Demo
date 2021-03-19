@@ -2,6 +2,13 @@
 #include "../../Common.h"
 #include "MsgCheckPoint.h"
 
+#include <iostream>
+#include <conio.h>
+#include <algorithm>
+#include <string>
+
+using namespace std;
+
 SingleClient* SingleClient::singleClient = nullptr;
 
 
@@ -21,7 +28,7 @@ SingleClient::SingleClient(char* IPAddr, int port)
 SingleClient* SingleClient::GetClientInstance(char* IPAddr, int port)
 {
     if (singleClient == nullptr) {
-        singleClient = new SingleClient();
+        singleClient = new SingleClient(IPAddr,port);
     }
     return singleClient;
 }
@@ -30,7 +37,7 @@ SingleClient::~SingleClient()
 {
 }
 
-
+//--------------------------------------------------------------------------------------------//
 void SingleClient::BeginChatting()
 {
     while (1)
@@ -59,6 +66,7 @@ bool SingleClient::SendToServer()
     int error;
     if (sendMsg->msgLen > 0) {
         error = send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
+        sendMsg->msgLen = 0;
     }
     else{
         error = send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
@@ -98,4 +106,30 @@ void SingleClient::CloseSocket()
     memset(sendMsg->msg, 0, BUFFER_MAX_LENG);
     memset(recvMsg->msg, 0, BUFFER_MAX_LENG);
     closesocket(*clientSocket);
+}
+
+//--------------------------------------------------------------------------------------------//
+void SingleClient::UserLogin()
+{
+    userID = -1;
+    SetUserName();
+    userID = GetUserID();
+}
+
+void SingleClient::SetUserName()
+{
+    cout << "Input your login name:" << endl;
+    getline(cin,userName);
+}
+
+int SingleClient::GetUserID()
+{
+    ConnectToServer();
+    Msg userInfor;
+    send(*clientSocket, USER_LOGIN, USER_LOGIN_LEN, 0);
+
+    send(*clientSocket, userName.c_str(), userName.length(), 0);
+    userInfor.msgLen = recv(*clientSocket, userInfor.msg, BUFFER_MAX_LENG, 0);
+    CloseSocket();
+    return MsgMachine->ClientToClient(userInfor.msg);
 }

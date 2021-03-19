@@ -70,7 +70,7 @@ void ConsoleCtr::PutMessageToConsole()
 void ConsoleCtr::ClearUserInput()
 {
 	SetCursorToLastLine();
-	cout << string(" ", userInput.size()) << "\r";
+	cout << string(userInput.size(), ' ') << "\r";
 }
 
 void ConsoleCtr::SetCursorToLastLine()
