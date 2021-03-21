@@ -3,17 +3,30 @@
 #include <iostream>
 #include <winsock2.h>
 
-#define LISTEN_MAX_LIST 10 
+#define LISTEN_MAX_LIST 10
 #define BUFFER_MAX_LENG 100
 
+#define MSG_HEAD_LEN 14
+#define USER_ID_LEN 4
+#define USER_MSG_LEN 4
+#define COMMON_PORT 1240
+
+// --14-- --4-- // --num-- --len-- --len-- --msg-- --msg-- //
 #define EMPTY_MESSAGE "bytedance_work"
 #define EMPTY_MESSAGE_LEN 14
 
-#define CMD_HEAD "cmd:"
-#define CMD_HEAD_LEN 4
-
+// --14-- --4-- --name--//
 #define USER_LOGIN "new_user_login"
 #define USER_LOGIN_LEN 14
+
+// --14-- --ID-- --Len-- --Msg-- //
+#define SEND_MSG "msg_from_user_"
+#define SEND_MSG_LEN 14
+
+#define CMD_HEAD "CMD:"
+#define CMD_HEAD_LEN 4
+
+
 
 using namespace std;
 

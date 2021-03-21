@@ -26,28 +26,29 @@ private:
 	MsgCheckPoint* MsgMachine;
 public:
 	Msg* sendMsg;
-
 	void BeginChatting();
-
 	bool ConnectToServer();
-
-	bool SendToServer();
-
-	bool RecvFromServer();
-
+	void SendToServer();
 	void CloseSocket();
 #pragma endregion
 
-#pragma region set Name
 public:
 	void UserLogin();
-
+	bool ifSendMessage;
 private:
 	int userID;
+	string userIDS;
 	string userName;
-	void SetUserName();
-	int GetUserID();
-#pragma endregion
 
 
+	void GetUserID();
+	void GetAllMessage();
+	void SendMsgToServer();
+
+
+};
+
+struct msgCon{
+	int len;
+	string content;
 };

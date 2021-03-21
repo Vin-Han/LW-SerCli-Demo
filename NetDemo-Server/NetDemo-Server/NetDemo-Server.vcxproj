@@ -141,10 +141,12 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SingleServer.cpp" />
+    <ClCompile Include="UnpackMachine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common.h" />
     <ClInclude Include="SingleServer.h" />
+    <ClInclude Include="UnpackMachine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

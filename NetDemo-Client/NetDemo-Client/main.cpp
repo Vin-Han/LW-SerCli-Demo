@@ -2,6 +2,7 @@
 #include "SingleClient.h"
 #include "ConsoleCtr.h"
 #include "MsgCheckPoint.h"
+#include "../../Common.h"
 
 int main() {
 
@@ -12,7 +13,7 @@ int main() {
 
 
     ConsoleCtr* console = ConsoleCtr::GetInstance();
-    SingleClient* client = SingleClient::GetClientInstance(IP,1236);
+    SingleClient* client = SingleClient::GetClientInstance(IP, 1235);
     MsgCheckPoint* msgMAchine = MsgCheckPoint::GetInstence();
 
     msgMAchine->SetClient(client);

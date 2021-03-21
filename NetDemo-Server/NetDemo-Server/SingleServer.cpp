@@ -1,26 +1,54 @@
 #include "SingleServer.h"
+#include <sstream>
 
-
-SingleServer::SingleServer(int ServerID):serverID(ServerID)
+SingleServer::SingleServer(int ServerID)
 {
-    serverSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    memset(&serverAddr, 0, sizeof(serverAddr));  
-    serverAddr.sin_family = PF_INET; 
-    serverAddr.sin_addr.s_addr = ADDR_ANY;
-
-    userCount = 1000;
+    ServerID = ServerID;
     msgList.clear();
+    userCurPos.clear();
+    userCount = 0;
+    userList["Manager"] = userCount;
+    userNameList.push_back("Manager");
+    userCurPos.push_back(0);
 }
 
 SingleServer::~SingleServer()
 {
-    closesocket(serverSock);
+    closesocket(serverSocket);
+}
+
+void SingleServer::InitChattingRoom(int port)
+{
+    SetServerSocket();
+    BindServerToPort(1236);
+    BeginToListen();
+}
+
+void SingleServer::OpenChattingRoom()
+{
+    ifOpenChatting = true;
+    while (1)
+    {
+        if (AcceptClient() == true) {
+            RecvFromClient();
+            CloseClientSocket();
+        }
+    }
+}
+
+void SingleServer::SetServerSocket()
+{
+    serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    serverAddr.sin_family = PF_INET;
+    serverAddr.sin_addr.s_addr = ADDR_ANY;
 }
 
 bool SingleServer::BindServerToPort(int port)
 {
+    tempMsg.ClearMsg();
     serverAddr.sin_port = htons(port);  //¶Ë¿Ú
-    int error = bind(serverSock, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
+    int error = bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
     if (error == 0)
         return true;
     else {
@@ -31,7 +59,7 @@ bool SingleServer::BindServerToPort(int port)
 
 bool SingleServer::BeginToListen()
 {
-    int error = listen(serverSock, LISTEN_MAX_LIST);
+    int error = listen(serverSocket, LISTEN_MAX_LIST);
     if (error != -1)
         return true;
     else {
@@ -40,10 +68,15 @@ bool SingleServer::BeginToListen()
     }
 }
 
+void SingleServer::CloseChattingRoom()
+{
+    ifOpenChatting = false;
+}
+
 bool SingleServer::AcceptClient()
 {
     sockaddr_in clientAddr;
-    clientSocket = accept(serverSock, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
+    clientSocket = accept(serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
     if (clientSocket != -1)
         return true;
     else {
@@ -52,30 +85,14 @@ bool SingleServer::AcceptClient()
     }
 }
 
-bool SingleServer::RecvFromClient()
+void SingleServer::RecvFromClient()
 {
     tempMsg.msgLen = recv(clientSocket, tempMsg.msg, BUFFER_MAX_LENG, 0);
-    if (tempMsg.msgLen >= 0) {
-        if (RecvMsgCheck()) {
-            msgList.push_back(tempMsg.msg);
-        }
-        return true;
-    }
-    else {
+    if (tempMsg.msgLen >= MSG_HEAD_LEN)
+        RecvMsgCheck();
+    else
         LogMsg("Server Receive Msg Error");
-        return false;
-    }
 }
-
-bool SingleServer::SendToClient()
-{
-    send(clientSocket, "0",1 , 0);
-
-    return true;
-
-}
-
-
 
 void SingleServer::CloseClientSocket()
 {
@@ -83,37 +100,169 @@ void SingleServer::CloseClientSocket()
     closesocket(clientSocket); 
 }
  
-bool SingleServer::RecvMsgCheck()
+void SingleServer::RecvMsgCheck()
 {
-    if (tempMsg.msgLen == EMPTY_MESSAGE_LEN && 
-        StringBeginWith(EMPTY_MESSAGE, tempMsg.msg)) {
-        return false;
-    }
-    else if (tempMsg.msgLen == USER_LOGIN_LEN &&
-        StringBeginWith(USER_LOGIN, tempMsg.msg))
-    {
+    if (StringBeginWith(EMPTY_MESSAGE, tempMsg.msg));
+        //GetLastMsg();
+    else if (StringBeginWith(USER_LOGIN, tempMsg.msg))
         AddNewUser();
-    }
-    return true;
+    else if(StringBeginWith(SEND_MSG, tempMsg.msg))
+        AddNewMessage();
 }
 
+// R_S //
 void SingleServer::AddNewUser()
 {
-    Msg newUser;
-    newUser.msgLen = recv(clientSocket, newUser.msg, BUFFER_MAX_LENG, 0);
-    if (userList.count(newUser.msg) != 0) {
-        map<string, int>::const_iterator userInfor = userList.find(newUser.msg);
-        char userID[5];
-        _itoa_s(userInfor->second, userID, 10);
-        send(clientSocket, userID, 4, 0);
+    int curHead = MSG_HEAD_LEN;
+    int curTail = MSG_HEAD_LEN + USER_ID_LEN;
+    string message = tempMsg.msg;
+
+    // get name length
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    int nameLen = stoi(message.substr(curHead, USER_ID_LEN));
+    curHead = curTail;
+    curTail += nameLen;
+    // get name
+
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    string userName = string(message.substr(curHead, nameLen));
+
+    // return user ID
+    if (userList.count(userName) != 0) {
+        // if exist, send ID
+        map<string, int>::const_iterator userInfor = userList.find(userName);
+
+        string userIDS = to_string(userInfor->second);
+        while (userIDS.size() < 4)
+            userIDS = "0" + userIDS;
+
+        send(clientSocket, userIDS.c_str(), 4, 0);
     }
     else
     {
+        // if new, build new ID
         userCount += 1;
-        char userID[5];
-        _itoa_s(userCount, userID,10);
-        userList[(newUser.msg)] = userCount;
-        send(clientSocket, userID, 4, 0);
+        string userIDS = to_string(userCount);
+        while (userIDS.size() < 4)
+            userIDS = "0" + userIDS;
+
+        userList[(userName)] = userCount;
+        userNameList.push_back(userName);
+        userCurPos.push_back(0);
+
+        send(clientSocket, userIDS.c_str(), 4, 0);
     }
 }
+
+// R_R //
+void SingleServer::AddNewMessage()
+{
+    int curHead = MSG_HEAD_LEN;
+    int curTail = MSG_HEAD_LEN + USER_ID_LEN;
+    string message = tempMsg.msg;
+
+    // get ID
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    int userID = stoi(message.substr(curHead, USER_ID_LEN));
+    curHead = curTail;
+    curTail += USER_MSG_LEN;
+
+    // get length
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    int msgLen = stoi(message.substr(curHead, USER_ID_LEN));
+    curHead = curTail;
+    curTail += msgLen;
+
+    // get name
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    string userMsg = string(message.substr(curHead, msgLen));
+
+    // store message
+    string storeMsg = userNameList[userID] + ":" + userMsg;
+    msgList.push_back(storeMsg);
+}
+
+// R_S_NS //
+void SingleServer::GetLastMsg()
+{
+    int curHead = MSG_HEAD_LEN;
+    int curTail = MSG_HEAD_LEN + USER_ID_LEN;
+    string message = tempMsg.msg;
+
+    // get ID
+    while (message.size() < curTail)
+    {
+        char* newUser = new char[100]{ 0 };
+        recv(clientSocket, newUser, BUFFER_MAX_LENG, 0);
+        message += newUser;
+    }
+    int userID = stoi(string(message, curHead, (curTail - 1)));
+
+    if (userID > userCurPos.size())
+        LogMsg("Server Client is not exist");
+    else
+    {
+        // send number
+        int msgNum = msgList.size() - userCurPos[userID];
+        string msgNumS = to_string(msgNum);
+        while (msgNumS.size() < 4)
+            msgNumS = "0" + msgNumS;
+        send(clientSocket, msgNumS.c_str(), 4, 0);
+
+        if (msgNum > 0) {
+            // send len
+            string msgLen = "";
+            for (int i = userCurPos[userID]; i < msgList.size(); i++)
+            {
+                string singleLen = to_string(msgList[i].size());
+                while (singleLen.size() < 4)
+                    singleLen = "0" + singleLen;
+                msgLen += msgLen;
+            }
+            send(clientSocket, msgLen.c_str(), msgLen.size(), 0);
+
+            // send msg
+            for (int i = userCurPos[userID]; i < msgList.size(); i++)
+            {
+                send(clientSocket, msgList[i].c_str(), msgList[i].size(), 0);
+            }
+            userCurPos[userID] = msgList.size();
+        }
+        else
+        {
+            LogMsg(" 0 msg");
+        }
+    }
+}
+
+
+
+
+
+
 

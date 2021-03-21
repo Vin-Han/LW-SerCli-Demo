@@ -19,6 +19,7 @@ void MsgCheckPoint::ConsoleToClient(const string& Msg)
 	if (UserInputCheck(Msg)) {
 		strcpy(client->sendMsg->msg, Msg.c_str());
 		client->sendMsg->msgLen = Msg.size();
+		client->ifSendMessage = true;
 	}
 }
 
@@ -38,9 +39,6 @@ bool MsgCheckPoint::UserInputCheck(const string& Msg)
 {
 	if (StringBeginWith(Msg,CMD_HEAD)) {
 		string cmd = string(Msg,CMD_HEAD_LEN, Msg.size());
-		if (cmd == "") {
-			
-		}
 		return false;
 	}
 	return true;

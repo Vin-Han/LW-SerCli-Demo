@@ -19,8 +19,13 @@ SingleClient::SingleClient(char* IPAddr, int port)
     serverAddr.sin_addr.s_addr = inet_addr(IPAddr);
     serverAddr.sin_port = htons(port);
 
+    userID = -1;
+    userIDS = "";
+
     recvMsg = new Msg();
     sendMsg = new Msg();
+
+    ifSendMessage = false;
 
     MsgMachine = MsgCheckPoint::GetInstence();
 }
@@ -44,7 +49,6 @@ void SingleClient::BeginChatting()
     {
         ConnectToServer();
         SendToServer();
-        RecvFromServer();
         CloseSocket();
     }
 }
@@ -61,75 +65,147 @@ bool SingleClient::ConnectToServer()
     }
 }
 
-bool SingleClient::SendToServer()
+void SingleClient::SendToServer()
 {
-    int error;
-    if (sendMsg->msgLen > 0) {
-        error = send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
-        sendMsg->msgLen = 0;
+    if (userID == -1) {
+        send(*clientSocket, USER_LOGIN, USER_LOGIN_LEN, 0);
+        GetUserID();
     }
-    else{
-        error = send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
-    }
-    if (error != -1) {
-        return true;
+    else if(ifSendMessage) {
+        send(*clientSocket, SEND_MSG, SEND_MSG_LEN, 0);
+        SendMsgToServer();
     }
     else {
-        LogMsg("Client Send Msg Error");
-        return false;
+        send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
+        //GetAllMessage();
     }
-}
-
-bool SingleClient::RecvFromServer()
-{
-    recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
-    if (recvMsg->msgLen == 0) {
-        LogMsg("Client Receive Msg Error");
-        return false;
-    }
-
-    int recvTimes = MsgMachine->ClientToClient(recvMsg->msg);
-    for (int i = 0; i < recvTimes; i++)
-    {
-        recvMsg->msgLen = recv(*clientSocket, recvMsg->msg, BUFFER_MAX_LENG, 0);
-        if (recvMsg->msgLen == 0) {
-            LogMsg("Client Receive Msg Error");
-            return false;
-        }
-        MsgMachine->ClientToConsole(recvMsg->msg);
-    }
-    return true;
 }
 
 void SingleClient::CloseSocket()
 {
-    memset(sendMsg->msg, 0, BUFFER_MAX_LENG);
-    memset(recvMsg->msg, 0, BUFFER_MAX_LENG);
     closesocket(*clientSocket);
 }
 
 //--------------------------------------------------------------------------------------------//
 void SingleClient::UserLogin()
 {
-    userID = -1;
-    SetUserName();
-    userID = GetUserID();
-}
-
-void SingleClient::SetUserName()
-{
     cout << "Input your login name:" << endl;
-    getline(cin,userName);
+    getline(cin, userName);
 }
 
-int SingleClient::GetUserID()
+// S_R //
+void SingleClient::GetUserID()
 {
-    ConnectToServer();
-    Msg userInfor;
-    send(*clientSocket, USER_LOGIN, USER_LOGIN_LEN, 0);
+    // send nameLen
+    string nameLen = to_string(userName.size());
+    while (nameLen.size() < 4)
+        nameLen = "0" + nameLen;
+    send(*clientSocket, nameLen.c_str(), nameLen.length(), 0);
 
+    // send name
     send(*clientSocket, userName.c_str(), userName.length(), 0);
-    userInfor.msgLen = recv(*clientSocket, userInfor.msg, BUFFER_MAX_LENG, 0);
-    CloseSocket();
-    return MsgMachine->ClientToClient(userInfor.msg);
+
+    // get ID
+    while (userIDS.size() < 4)
+    {
+        char* tempID = new char[100]{ 0 };
+        recv(*clientSocket, tempID, BUFFER_MAX_LENG, 0);
+        userIDS += tempID;
+    }
+
+    // set ID
+    userID = stoi(userIDS);
 }
+
+// S_S //
+void SingleClient::SendMsgToServer()
+{
+    string MsgLen = to_string(strlen(sendMsg->msg));
+    while (MsgLen.size() < 4)
+        MsgLen = "0" + MsgLen;
+    // send ID
+    send(*clientSocket, userIDS.c_str(), 4, 0);
+    // send msg len
+    send(*clientSocket, MsgLen.c_str(), 4, 0);
+    // send message
+    send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
+
+    sendMsg->ClearMsg();
+    ifSendMessage = false;
+}
+
+// S_R_NR //
+void SingleClient::GetAllMessage()
+{
+
+    // send ID
+    send(*clientSocket, userIDS.c_str(), 4, 0);
+
+    // recv Num
+    int curHead = 0;
+    int curTail = USER_ID_LEN;
+    string message = "";
+    while (message.size() < curTail)
+    {
+        char* newNum = new char[100]{ 0 };
+        recv(*clientSocket, newNum, BUFFER_MAX_LENG, 0);
+        message += newNum;
+    }
+    int msgNum = stoi(string(message, curHead, curTail - 1));
+    if (msgNum > 0) {
+        int curHead = curTail;
+        int curTail = curTail + (msgNum * USER_ID_LEN);
+
+        while (message.size() < curTail)
+        {
+            char* newLen = new char[100]{ 0 };
+            recv(*clientSocket, newLen, BUFFER_MAX_LENG, 0);
+            message += newLen;
+        }
+        vector<msgCon> msgList;
+
+        for (int i = curHead; i < curTail; i + 4)
+        {
+            msgCon newMsgCon;
+            newMsgCon.len = stoi(string(message, i, i + 3));
+            msgList.push_back(newMsgCon);
+        }
+        int curIndex = 0;
+        int nextMsgLen = msgList[curIndex].len;
+
+        curHead = curTail;
+        curTail = curTail + nextMsgLen;
+        
+        while (nextMsgLen != 0)
+        {
+            while (message.size() < curTail)
+            {
+                char* newMsgContext = new char[100]{ 0 };
+                recv(*clientSocket, newMsgContext, BUFFER_MAX_LENG, 0);
+                message += newMsgContext;
+            }
+            msgList[curIndex].content = string(message, curHead, curTail - 1);
+            curIndex++;
+            if (curIndex < msgList.size())
+            {
+                nextMsgLen = msgList[curIndex].len;
+            }
+            else
+            {
+                nextMsgLen = 0;
+            }
+            curHead = curTail;
+            curTail = curTail + nextMsgLen;
+        }
+        for (msgCon tempCon : msgList)
+        {
+            MsgMachine->ClientToConsole(tempCon.content);
+        }
+    }
+    else
+    {
+        LogMsg(" 0 msg");
+    }
+
+}
+
