@@ -15,7 +15,7 @@ SingleClient* SingleClient::singleClient = nullptr;
 SingleClient::SingleClient(char* IPAddr, int port)
 {
     memset(&serverAddr, 0, sizeof(serverAddr));  //每个字节都用0填充
-    serverAddr.sin_family = PF_INET;
+    serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = inet_addr(IPAddr);
     serverAddr.sin_port = htons(port);
 
