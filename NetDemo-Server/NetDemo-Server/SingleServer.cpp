@@ -14,7 +14,7 @@ SingleServer::SingleServer(int ServerID)
 
 SingleServer::~SingleServer()
 {
-    closesocket(serverSocket);
+    closesocket(*serverSocket);
 }
 
 void SingleServer::InitChattingRoom(int port)
@@ -38,7 +38,7 @@ void SingleServer::OpenChattingRoom()
 
 void SingleServer::SetServerSocket()
 {
-    serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    serverSocket = new SOCKET(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP));
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = PF_INET;
     serverAddr.sin_addr.s_addr = ADDR_ANY;
@@ -48,7 +48,7 @@ bool SingleServer::BindServerToPort(int port)
 {
     tempMsg.ClearMsg();
     serverAddr.sin_port = htons(port);  //¶Ë¿Ú
-    int error = bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
+    int error = bind(*serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
     if (error == 0)
         return true;
     else {
@@ -59,7 +59,7 @@ bool SingleServer::BindServerToPort(int port)
 
 bool SingleServer::BeginToListen()
 {
-    int error = listen(serverSocket, LISTEN_MAX_LIST);
+    int error = listen(*serverSocket, LISTEN_MAX_LIST);
     if (error != -1)
         return true;
     else {
@@ -74,9 +74,8 @@ void SingleServer::CloseChattingRoom()
 }
 
 bool SingleServer::AcceptClient()
-{
-    sockaddr_in clientAddr;
-    clientSocket = accept(serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
+{    sockaddr_in clientAddr;
+    clientSocket = accept(*serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
     if (clientSocket != -1)
         return true;
     else {

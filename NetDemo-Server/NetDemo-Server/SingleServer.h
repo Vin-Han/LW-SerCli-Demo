@@ -17,7 +17,7 @@ public:
 	void CloseChattingRoom();
 
 private:
-	SOCKET serverSocket;
+	SOCKET* serverSocket;
 	SOCKET clientSocket;
 	sockaddr_in serverAddr;
 	bool ifOpenChatting;

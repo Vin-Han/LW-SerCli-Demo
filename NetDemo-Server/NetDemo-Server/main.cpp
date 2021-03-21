@@ -8,7 +8,7 @@ int main() {
 
     SingleServer* server = new SingleServer(1);
 
-    server->InitChattingRoom(1235);
+    server->InitChattingRoom(1260);
 
     server->OpenChattingRoom();
 

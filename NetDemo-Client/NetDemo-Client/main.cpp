@@ -13,15 +13,16 @@ int main() {
 
 
     ConsoleCtr* console = ConsoleCtr::GetInstance();
-    SingleClient* client = SingleClient::GetClientInstance(IP, 1235);
+    SingleClient* client = SingleClient::GetClientInstance(IP, 1260);
     MsgCheckPoint* msgMAchine = MsgCheckPoint::GetInstence();
 
     msgMAchine->SetClient(client);
     msgMAchine->SetConsole(console);
 
     client->UserLogin();
-    console->BeginInputThread();
     client->BeginChatting();
+    console->BeginInputThread();
+
 
     WSACleanup();
     return 0;
