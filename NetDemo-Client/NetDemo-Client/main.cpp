@@ -20,8 +20,9 @@ int main() {
     msgMAchine->SetConsole(console);
 
     client->UserLogin();
-    client->BeginChatting();
     console->BeginInputThread();
+    client->BeginChatting();
+
 
 
     WSACleanup();

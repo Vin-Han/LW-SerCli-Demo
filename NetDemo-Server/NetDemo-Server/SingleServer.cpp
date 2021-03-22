@@ -102,8 +102,8 @@ void SingleServer::CloseClientSocket()
  
 void SingleServer::RecvMsgCheck()
 {
-    if (StringBeginWith(EMPTY_MESSAGE, tempMsg.msg));
-        //GetLastMsg();
+    if (StringBeginWith(EMPTY_MESSAGE, tempMsg.msg))
+        GetLastMsg();
     else if (StringBeginWith(USER_LOGIN, tempMsg.msg))
         AddNewUser();
     else if(StringBeginWith(SEND_MSG, tempMsg.msg))
@@ -242,7 +242,7 @@ void SingleServer::GetLastMsg()
                 string singleLen = to_string(msgList[i].size());
                 while (singleLen.size() < 4)
                     singleLen = "0" + singleLen;
-                msgLen += msgLen;
+                msgLen += singleLen;
             }
             send(clientSocket, msgLen.c_str(), msgLen.size(), 0);
 

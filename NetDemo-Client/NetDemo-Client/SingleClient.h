@@ -32,19 +32,21 @@ public:
 	void CloseSocket();
 #pragma endregion
 
+
+#pragma region message send function
 public:
 	void UserLogin();
 	bool ifSendMessage;
+	bool ifQuestAllMsg;
 private:
 	int userID;
 	string userIDS;
 	string userName;
 
-
 	void GetUserID();
 	void GetAllMessage();
 	void SendMsgToServer();
-
+#pragma endregion
 
 };
 

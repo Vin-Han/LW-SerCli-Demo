@@ -26,6 +26,7 @@ SingleClient::SingleClient(char* IPAddr, int port)
     sendMsg = new Msg();
 
     ifSendMessage = false;
+    ifQuestAllMsg = false;
 
     MsgMachine = MsgCheckPoint::GetInstence();
 }
@@ -75,9 +76,9 @@ void SingleClient::SendToServer()
         send(*clientSocket, SEND_MSG, SEND_MSG_LEN, 0);
         SendMsgToServer();
     }
-    else {
+    else if(ifQuestAllMsg){
         send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
-        //GetAllMessage();
+        GetAllMessage();
     }
 }
 
@@ -86,7 +87,6 @@ void SingleClient::CloseSocket()
     closesocket(*clientSocket);
 }
 
-//--------------------------------------------------------------------------------------------//
 void SingleClient::UserLogin()
 {
     cout << "Input your login name:" << endl;
@@ -132,6 +132,7 @@ void SingleClient::SendMsgToServer()
 
     sendMsg->ClearMsg();
     ifSendMessage = false;
+    ifQuestAllMsg = true;
 }
 
 // S_R_NR //
@@ -151,10 +152,10 @@ void SingleClient::GetAllMessage()
         recv(*clientSocket, newNum, BUFFER_MAX_LENG, 0);
         message += newNum;
     }
-    int msgNum = stoi(string(message, curHead, curTail - 1));
+    int msgNum = stoi(string(message, curHead, USER_ID_LEN));
     if (msgNum > 0) {
-        int curHead = curTail;
-        int curTail = curTail + (msgNum * USER_ID_LEN);
+        curHead = curTail;
+        curTail = curTail + (msgNum * USER_ID_LEN);
 
         while (message.size() < curTail)
         {
@@ -164,10 +165,10 @@ void SingleClient::GetAllMessage()
         }
         vector<msgCon> msgList;
 
-        for (int i = curHead; i < curTail; i + 4)
+        for (int i = curHead; i < curTail; i += 4)
         {
             msgCon newMsgCon;
-            newMsgCon.len = stoi(string(message, i, i + 3));
+            newMsgCon.len = stoi(string(message, i, USER_ID_LEN));
             msgList.push_back(newMsgCon);
         }
         int curIndex = 0;
@@ -206,6 +207,6 @@ void SingleClient::GetAllMessage()
     {
         LogMsg(" 0 msg");
     }
-
+    ifQuestAllMsg = false;
 }
 
