@@ -17,7 +17,7 @@ public:
 	void CloseChattingRoom();
 
 private:
-	SOCKET* serverSocket;
+	SOCKET serverSocket;
 	SOCKET clientSocket;
 	sockaddr_in serverAddr;
 	bool ifOpenChatting;
@@ -25,8 +25,8 @@ private:
 	vector<string> msgList;
 	int serverID;
 
-	void SetServerSocket();
-	bool BindServerToPort(int port);
+	void SetServerSocket(int port);
+	bool BindServerToPort();
 	bool BeginToListen();
 	bool AcceptClient();
 	void RecvFromClient();

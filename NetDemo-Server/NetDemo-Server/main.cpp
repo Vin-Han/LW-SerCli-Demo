@@ -3,7 +3,7 @@
 #include "../../Common.h"
 
 
-int main() {
+int maina() {
     //³õÊ¼»¯ DLL
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -41,13 +41,13 @@ int main() {
     return 0;
 }
 
-int mainas() {
+int main() {
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     SingleServer* server = new SingleServer(1);
 
-    server->InitChattingRoom(1260);
+    server->InitChattingRoom(1234);
 
     server->OpenChattingRoom();
 

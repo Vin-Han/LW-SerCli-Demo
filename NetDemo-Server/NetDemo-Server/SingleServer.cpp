@@ -3,7 +3,7 @@
 
 SingleServer::SingleServer(int ServerID)
 {
-    ServerID = ServerID;
+    serverID = ServerID;
     msgList.clear();
     userCurPos.clear();
     userCount = 0;
@@ -14,13 +14,13 @@ SingleServer::SingleServer(int ServerID)
 
 SingleServer::~SingleServer()
 {
-    closesocket(*serverSocket);
+    closesocket(serverSocket);
 }
 
 void SingleServer::InitChattingRoom(int port)
 {
-    SetServerSocket();
-    BindServerToPort(1236);
+    SetServerSocket(port);
+    BindServerToPort();
     BeginToListen();
 }
 
@@ -36,19 +36,20 @@ void SingleServer::OpenChattingRoom()
     }
 }
 
-void SingleServer::SetServerSocket()
+void SingleServer::SetServerSocket(int port)
 {
-    serverSocket = new SOCKET(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP));
+    serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = PF_INET;
     serverAddr.sin_addr.s_addr = ADDR_ANY;
+    serverAddr.sin_port = htons(port);  //¶Ë¿Ú
 }
 
-bool SingleServer::BindServerToPort(int port)
+bool SingleServer::BindServerToPort()
 {
     tempMsg.ClearMsg();
-    serverAddr.sin_port = htons(port);  //¶Ë¿Ú
-    int error = bind(*serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
+
+    int error = bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
     if (error == 0)
         return true;
     else {
@@ -59,7 +60,7 @@ bool SingleServer::BindServerToPort(int port)
 
 bool SingleServer::BeginToListen()
 {
-    int error = listen(*serverSocket, LISTEN_MAX_LIST);
+    int error = listen(serverSocket, LISTEN_MAX_LIST);
     if (error != -1)
         return true;
     else {
@@ -75,7 +76,7 @@ void SingleServer::CloseChattingRoom()
 
 bool SingleServer::AcceptClient()
 {    sockaddr_in clientAddr;
-    clientSocket = accept(*serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
+    clientSocket = accept(serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
     if (clientSocket != -1)
         return true;
     else {
