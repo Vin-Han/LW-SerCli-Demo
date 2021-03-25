@@ -21,7 +21,10 @@
     <ClCompile Include="SingleServer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="UnpackMachine.cpp">
+    <ClCompile Include="ConsoleCtr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +35,10 @@
     <ClInclude Include="..\..\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="UnpackMachine.h">
+    <ClInclude Include="ConsoleCtr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMain.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

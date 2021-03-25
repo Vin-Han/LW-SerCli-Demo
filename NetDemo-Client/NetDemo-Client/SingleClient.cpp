@@ -22,11 +22,11 @@ SingleClient::SingleClient(char* IPAddr, int port)
     userID = -1;
     userIDS = "";
 
-    recvMsg = new Msg();
     sendMsg = new Msg();
 
     ifSendMessage = false;
     ifQuestAllMsg = false;
+    ifKeepChatting = false;
 
     MsgMachine = MsgCheckPoint::GetInstence();
 }
@@ -46,6 +46,10 @@ SingleClient::~SingleClient()
 //--------------------------------------------------------------------------------------------//
 void SingleClient::BeginChatting()
 {
+    msgCheckThread = new thread(BeginMsgCheckThread);
+    msgCheckThread->detach();
+
+    ifKeepChatting = true;
     while (1)
     {
         ConnectToServer();
@@ -77,8 +81,12 @@ void SingleClient::SendToServer()
         SendMsgToServer();
     }
     else if(ifQuestAllMsg){
-        send(*clientSocket, EMPTY_MESSAGE, EMPTY_MESSAGE_LEN, 0);
+        send(*clientSocket, GET_ALL_MSG, GET_ALL_MSG_LEN, 0);
         GetAllMessage();
+    }
+    else
+    {
+        send(*clientSocket, EMPTY_MSG, EMPTY_MSG_LEN, 0);
     }
 }
 
@@ -205,8 +213,17 @@ void SingleClient::GetAllMessage()
     }
     else
     {
-        LogMsg(" 0 msg");
+        //LogMsg(" 0 msg");
     }
     ifQuestAllMsg = false;
 }
 
+
+void SingleClient::BeginMsgCheckThread()
+{
+    while (SingleClient::GetClientInstance()->ifKeepChatting == true)
+    {
+        SingleClient::GetClientInstance()->ifQuestAllMsg = true;
+        Sleep(3000);
+    }
+}

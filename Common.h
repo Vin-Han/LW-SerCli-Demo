@@ -12,16 +12,20 @@
 #define COMMON_PORT 1240
 
 // --14-- --4-- // --num-- --len-- --len-- --msg-- --msg-- //
-#define EMPTY_MESSAGE "bytedance_work"
-#define EMPTY_MESSAGE_LEN 14
+#define GET_ALL_MSG "bytedance_work"
+#define GET_ALL_MSG_LEN 14
 
 // --14-- --4-- --name--//
-#define USER_LOGIN "new_user_login"
+#define USER_LOGIN    "new_user_login"
 #define USER_LOGIN_LEN 14
 
 // --14-- --ID-- --Len-- --Msg-- //
-#define SEND_MSG "msg_from_user_"
+#define SEND_MSG      "msg_from_user_"
 #define SEND_MSG_LEN 14
+
+// --14-- --ID-- --Len-- --Msg-- //
+#define EMPTY_MSG	  "empty_message_"
+#define EMPTY_MSG_LEN 14
 
 #define CMD_HEAD "CMD:"
 #define CMD_HEAD_LEN 4

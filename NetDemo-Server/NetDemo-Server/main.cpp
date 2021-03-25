@@ -1,6 +1,29 @@
 #pragma comment (lib, "ws2_32.lib")
 #include "SingleServer.h"
+#include "ServerMain.h"
 #include "../../Common.h"
+
+
+int main() {
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    ServerMain* serverMain = ServerMain::GetInstance();
+    SingleServer* server = new SingleServer(1);
+
+    serverMain->BeginListen(1234);
+
+
+    server->OpenChattingRoom();
+
+    delete server;
+
+    WSACleanup();
+
+    return 0;
+}
+
+
 
 
 int maina() {
@@ -36,23 +59,6 @@ int maina() {
     closesocket(servSock);
 
     //ÖÕÖ¹ DLL µÄÊ¹ÓÃ
-    WSACleanup();
-
-    return 0;
-}
-
-int main() {
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-    SingleServer* server = new SingleServer(1);
-
-    server->InitChattingRoom(1234);
-
-    server->OpenChattingRoom();
-
-    delete server;
-
     WSACleanup();
 
     return 0;

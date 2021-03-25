@@ -1,4 +1,5 @@
 #include "SingleServer.h"
+#include "ServerMain.h"
 #include <sstream>
 
 SingleServer::SingleServer(int ServerID)
@@ -7,6 +8,7 @@ SingleServer::SingleServer(int ServerID)
     msgList.clear();
     userCurPos.clear();
     userCount = 0;
+    tempMsg.ClearMsg();
     userList["Manager"] = userCount;
     userNameList.push_back("Manager");
     userCurPos.push_back(0);
@@ -15,13 +17,6 @@ SingleServer::SingleServer(int ServerID)
 SingleServer::~SingleServer()
 {
     closesocket(serverSocket);
-}
-
-void SingleServer::InitChattingRoom(int port)
-{
-    SetServerSocket(port);
-    BindServerToPort();
-    BeginToListen();
 }
 
 void SingleServer::OpenChattingRoom()
@@ -36,38 +31,6 @@ void SingleServer::OpenChattingRoom()
     }
 }
 
-void SingleServer::SetServerSocket(int port)
-{
-    serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = PF_INET;
-    serverAddr.sin_addr.s_addr = ADDR_ANY;
-    serverAddr.sin_port = htons(port);  //¶Ë¿Ú
-}
-
-bool SingleServer::BindServerToPort()
-{
-    tempMsg.ClearMsg();
-
-    int error = bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
-    if (error == 0)
-        return true;
-    else {
-        LogMsg("Server Bind Error");
-        return false;
-    }
-}
-
-bool SingleServer::BeginToListen()
-{
-    int error = listen(serverSocket, LISTEN_MAX_LIST);
-    if (error != -1)
-        return true;
-    else {
-        LogMsg("Server Listen Error");
-        return false;
-    }
-}
 
 void SingleServer::CloseChattingRoom()
 {
@@ -75,8 +38,9 @@ void SingleServer::CloseChattingRoom()
 }
 
 bool SingleServer::AcceptClient()
-{    sockaddr_in clientAddr;
-    clientSocket = accept(serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
+{    
+    sockaddr_in clientAddr;
+    clientSocket = accept(ServerMain::GetInstance()->serverSocket, (SOCKADDR*)&clientAddr, &SOCKET_ADDR_LENGTH);
     if (clientSocket != -1)
         return true;
     else {
@@ -102,12 +66,13 @@ void SingleServer::CloseClientSocket()
  
 void SingleServer::RecvMsgCheck()
 {
-    if (StringBeginWith(EMPTY_MESSAGE, tempMsg.msg))
+    if (StringBeginWith(GET_ALL_MSG, tempMsg.msg))
         GetLastMsg();
     else if (StringBeginWith(USER_LOGIN, tempMsg.msg))
         AddNewUser();
     else if(StringBeginWith(SEND_MSG, tempMsg.msg))
         AddNewMessage();
+    else if (StringBeginWith(EMPTY_MSG, tempMsg.msg)){}
 }
 
 // R_S //

@@ -4,7 +4,6 @@
 #include "../../Common.h"
 
 #include <conio.h>
-#include <algorithm>
 #include <string>
 
 ConsoleCtr* ConsoleCtr::clientConsole = nullptr;

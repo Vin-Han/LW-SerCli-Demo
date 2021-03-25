@@ -3,6 +3,8 @@
 #include <winsock2.h>
 #include "ConsoleCtr.h"
 #include <vector>
+#include <thread>
+
 
 class Msg;
 class MsgCheckPoint;
@@ -22,7 +24,6 @@ public:
 private:
 	sockaddr_in serverAddr;
 	SOCKET* clientSocket;
-	Msg* recvMsg;
 	MsgCheckPoint* MsgMachine;
 public:
 	Msg* sendMsg;
@@ -47,6 +48,15 @@ private:
 	void GetAllMessage();
 	void SendMsgToServer();
 #pragma endregion
+
+#pragma region check msg thread
+public:
+	bool ifKeepChatting;
+private:
+	thread* msgCheckThread;
+	static void BeginMsgCheckThread();
+#pragma endregion
+
 
 };
 

@@ -12,7 +12,6 @@ public:
 
 #pragma region normal chatting room
 public:
-	void InitChattingRoom(int port);
 	void OpenChattingRoom();
 	void CloseChattingRoom();
 
@@ -25,9 +24,6 @@ private:
 	vector<string> msgList;
 	int serverID;
 
-	void SetServerSocket(int port);
-	bool BindServerToPort();
-	bool BeginToListen();
 	bool AcceptClient();
 	void RecvFromClient();
 	void CloseClientSocket();
