@@ -1,8 +1,7 @@
 #pragma once
 
-#include <iostream>
+#include <string>
 #include <deque>
-#include <thread>
 using namespace std;
 
 class MsgCheckPoint;
@@ -14,37 +13,24 @@ private:
 	ConsoleCtr();
 	static ConsoleCtr* clientConsole;
 public:
+	MsgCheckPoint* msgStation;
 	static ConsoleCtr* GetInstance();
 	~ConsoleCtr();
 #pragma endregion
 
 #pragma region input thread
 public:
-	void BeginInputThread();
-	void CloseInputThread();
-private:
-	thread* inputThread;
-	bool ifReceiveInput;
-
-	static void BuildThread();
-
+	void Begin();
+	void Close();
 #pragma endregion
 
 #pragma region UserInput function
-public:
-	deque<string> MsgList;
-
 private:
+	bool ifReceiveInput;
 	string userInput;
-	MsgCheckPoint* msgCheck;
+	string serverInput;
 
 	void PutMessageToConsole();
-#pragma endregion
-
-#pragma region console controller function
-private:
 	void ClearUserInput();
-	void SetCursorToLastLine();
 #pragma endregion
-
 };

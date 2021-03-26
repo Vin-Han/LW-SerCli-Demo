@@ -2,6 +2,9 @@
 
 #include <iostream>
 #include <winsock2.h>
+#include <string>
+
+using namespace std;
 
 #define LISTEN_MAX_LIST 10
 #define BUFFER_MAX_LENG 100
@@ -31,8 +34,34 @@
 #define CMD_HEAD_LEN 4
 
 
+// 网络协议包头 //
+#define CMD_LEN 8
+// 数字信息长度 //
+#define NUM_LEN 4
 
-using namespace std;
+
+// 进入聊天室
+static const char* CMD_ROOM = "intoroom";
+// 心跳包
+static const char* CMD_BEAT = "heartbag";
+// 注册用户
+static const char* CMD_REGI = "new_user";
+
+// 发送信息
+static const char* CMD_SEND = "send_msg";
+
+// 房间关闭
+static const char* CMD_OPEN = "roomopen";
+// 房间开启
+static const char* CMD_CLOS = "roomclos";
+
+
+// 最大听取时间
+static const int MAX_RECV_TIME = 10 * 1000;
+// 最大发送时间
+static const int MAX_SEND_TIME = 10 * 1000;
+
+
 
 static int SOCKET_ADDR_LENGTH = sizeof(SOCKADDR);
 
@@ -85,22 +114,38 @@ static void SetConSoleXY(int X, int Y)
 	SetConsoleCursorPosition(cursorInfor, cursorPos);
 }
 
+static void GetInputInt(int* target,const string& inforMsg) {
+	do
+	{
+		{
+			cout << inforMsg << endl;
+			cin.clear();
+			cin.get();
+			cin.sync();
+		}
+		cin >> *target;
+	} while (cin.fail() == false);
+}
 
+static void GetInputString(string& target, const string& inforMsg) {
+	do
+	{
+		{
+			cout << inforMsg << endl;
+			cin.clear();
+			cin.get();
+			cin.sync();
+		}
+		cin >> target;
+	} while (cin.fail() == false);
+}
 
-/*
-bind 返回值
-EADDRINUSE	给定地址已经使用
-EBADF	sockfd不合法
-EINVAL	sockfd已经绑定到其他地址
-ENOTSOCK	sockfd是一个文件描述符，不是socket描述符
-EACCES	地址被保护，用户的权限不足
-EADDRNOTAVAIL	接口不存在或者绑定地址不是本地	UNIX协议族，AF_UNIX
-EFAULT	my_addr指针超出用户空间	UNIX协议族，AF_UNIX
-EINVAL	地址长度错误，或者socket不是AF_UNIX族	UNIX协议族，AF_UNIX
-ELOOP	解析my_addr时符号链接过多	UNIX协议族，AF_UNIX
-ENAMETOOLONG	my_addr过长	UNIX协议族，AF_UNIX
-ENOENT	文件不存在	UNIX协议族，AF_UNIX
-ENOMEN	内存内核不足	UNIX协议族，AF_UNIX
-ENOTDIR	不是目录	UNIX协议族，AF_UNIX
-EROFS	socket节点应该在制度文件系统上	UNIX协议族，AF_UNIX
-*/
+static string IntToStringID(int ID, int len = 4)
+{
+	string target = to_string(ID);
+	while (target.size() < len)
+	{
+		target = "0" + target;
+	}
+	return target;
+}

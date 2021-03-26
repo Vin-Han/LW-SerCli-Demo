@@ -1,229 +1,260 @@
 #include "SingleClient.h"
 #include "../../Common.h"
-#include "MsgCheckPoint.h"
 
 #include <iostream>
 #include <conio.h>
 #include <algorithm>
-#include <string>
-
-using namespace std;
+#include <winsock2.h>
 
 SingleClient* SingleClient::singleClient = nullptr;
 
-
-SingleClient::SingleClient(char* IPAddr, int port)
-{
-    memset(&serverAddr, 0, sizeof(serverAddr));  //每个字节都用0填充
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr(IPAddr);
-    serverAddr.sin_port = htons(port);
-
-    userID = -1;
-    userIDS = "";
-
-    sendMsg = new Msg();
-
-    ifSendMessage = false;
-    ifQuestAllMsg = false;
-    ifKeepChatting = false;
-
-    MsgMachine = MsgCheckPoint::GetInstence();
-}
-
-SingleClient* SingleClient::GetClientInstance(char* IPAddr, int port)
+//--------------------------------------------------------------------------------------------//
+SingleClient* SingleClient::GetClientInstance()
 {
     if (singleClient == nullptr) {
-        singleClient = new SingleClient(IPAddr,port);
+        string IPAddr;
+        GetInputString(IPAddr, "Put Server IP Address :");
+
+        int portNum;
+        GetInputInt(&portNum, "Put Server Listen Port :");
+
+        singleClient = new SingleClient(IPAddr, portNum);
     }
     return singleClient;
+}
+
+SingleClient::SingleClient(string IPAddr, int port)
+{
+    clientSocket = new SOCKET(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP));
+    {
+        setsockopt(*clientSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&MAX_RECV_TIME, sizeof(int));
+        setsockopt(*clientSocket, SOL_SOCKET, SO_SNDTIMEO, (char*)&MAX_SEND_TIME, sizeof(int));
+    }
+
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    {
+        const char* ipAddr = IPAddr.c_str();
+        serverAddr.sin_family = AF_INET;
+        serverAddr.sin_addr.s_addr = inet_addr(ipAddr);
+        serverAddr.sin_port = htons(port);
+    }
+
+    curMsg = "";
+
+    ifKeepChatting = false;
+    ifSendMsg = false;
+    ifHeartBag = false;
+
+    msgList.clear();
+    sendMsg = new Msg();
 }
 
 SingleClient::~SingleClient()
 {
 }
 
-//--------------------------------------------------------------------------------------------//
-void SingleClient::BeginChatting()
+void SingleClient::Begin()
 {
-    msgCheckThread = new thread(BeginMsgCheckThread);
-    msgCheckThread->detach();
-
-    ifKeepChatting = true;
-    while (1)
-    {
-        ConnectToServer();
-        SendToServer();
-        CloseSocket();
-    }
+    GetRoomNumber();
+    GetUserNameID();
+    BeginChatToServer();
 }
 
-bool SingleClient::ConnectToServer()
-{
-    clientSocket = new SOCKET(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP));
-    int error = connect(*clientSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
-    if (error == 0)
-        return true;
-    else {
-        LogMsg("Client Connect Error");
-        return false;
-    }
-}
-
-void SingleClient::SendToServer()
-{
-    if (userID == -1) {
-        send(*clientSocket, USER_LOGIN, USER_LOGIN_LEN, 0);
-        GetUserID();
-    }
-    else if(ifSendMessage) {
-        send(*clientSocket, SEND_MSG, SEND_MSG_LEN, 0);
-        SendMsgToServer();
-    }
-    else if(ifQuestAllMsg){
-        send(*clientSocket, GET_ALL_MSG, GET_ALL_MSG_LEN, 0);
-        GetAllMessage();
-    }
-    else
-    {
-        send(*clientSocket, EMPTY_MSG, EMPTY_MSG_LEN, 0);
-    }
-}
-
-void SingleClient::CloseSocket()
+void SingleClient::End()
 {
     closesocket(*clientSocket);
+    delete clientSocket;
 }
 
-void SingleClient::UserLogin()
+//-----------------------------------------------------//
+bool SingleClient::GetRoomNumber()
 {
-    cout << "Input your login name:" << endl;
-    getline(cin, userName);
+    GetInputInt(&roomNum, "Which Room You Want To Enjoy:");
+    return LinkToServer();
 }
 
-// S_R //
-void SingleClient::GetUserID()
+
+bool SingleClient::LinkToServer()
 {
-    // send nameLen
-    string nameLen = to_string(userName.size());
-    while (nameLen.size() < 4)
-        nameLen = "0" + nameLen;
-    send(*clientSocket, nameLen.c_str(), nameLen.length(), 0);
-
-    // send name
-    send(*clientSocket, userName.c_str(), userName.length(), 0);
-
-    // get ID
-    while (userIDS.size() < 4)
-    {
-        char* tempID = new char[100]{ 0 };
-        recv(*clientSocket, tempID, BUFFER_MAX_LENG, 0);
-        userIDS += tempID;
+    int error = connect(*clientSocket, (SOCKADDR*)&serverAddr, sizeof(SOCKADDR));
+    if (error != 0) {
+        LogMsg("Client Connect Error, Check IPAddr or Port");
+        return false;
     }
-
-    // set ID
-    userID = stoi(userIDS);
+    else
+        return LinkToRoom();
 }
-
-// S_S //
-void SingleClient::SendMsgToServer()
+bool SingleClient::LinkToRoom()
 {
-    string MsgLen = to_string(strlen(sendMsg->msg));
-    while (MsgLen.size() < 4)
-        MsgLen = "0" + MsgLen;
-    // send ID
-    send(*clientSocket, userIDS.c_str(), 4, 0);
-    // send msg len
-    send(*clientSocket, MsgLen.c_str(), 4, 0);
-    // send message
-    send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
+    // send cmd head
+    send(*clientSocket, CMD_ROOM, CMD_LEN, 0);
+    // send room number
+    string roomNumS = IntToStringID(roomNum);
+    send(*clientSocket, roomNumS.c_str(), NUM_LEN, 0);
 
-    sendMsg->ClearMsg();
-    ifSendMessage = false;
-    ifQuestAllMsg = true;
-}
-
-// S_R_NR //
-void SingleClient::GetAllMessage()
-{
-
-    // send ID
-    send(*clientSocket, userIDS.c_str(), 4, 0);
-
-    // recv Num
-    int curHead = 0;
-    int curTail = USER_ID_LEN;
-    string message = "";
-    while (message.size() < curTail)
+    // get confirm
+    if (GetMsgWithLen(CMD_LEN))
     {
-        char* newNum = new char[100]{ 0 };
-        recv(*clientSocket, newNum, BUFFER_MAX_LENG, 0);
-        message += newNum;
-    }
-    int msgNum = stoi(string(message, curHead, USER_ID_LEN));
-    if (msgNum > 0) {
-        curHead = curTail;
-        curTail = curTail + (msgNum * USER_ID_LEN);
-
-        while (message.size() < curTail)
+        string result = CutMsgRegion(CMD_LEN);
+        if (StringBeginWith(result, CMD_OPEN))
+            return true;
+        else
         {
-            char* newLen = new char[100]{ 0 };
-            recv(*clientSocket, newLen, BUFFER_MAX_LENG, 0);
-            message += newLen;
-        }
-        vector<msgCon> msgList;
-
-        for (int i = curHead; i < curTail; i += 4)
-        {
-            msgCon newMsgCon;
-            newMsgCon.len = stoi(string(message, i, USER_ID_LEN));
-            msgList.push_back(newMsgCon);
-        }
-        int curIndex = 0;
-        int nextMsgLen = msgList[curIndex].len;
-
-        curHead = curTail;
-        curTail = curTail + nextMsgLen;
-        
-        while (nextMsgLen != 0)
-        {
-            while (message.size() < curTail)
-            {
-                char* newMsgContext = new char[100]{ 0 };
-                recv(*clientSocket, newMsgContext, BUFFER_MAX_LENG, 0);
-                message += newMsgContext;
-            }
-            msgList[curIndex].content = string(message, curHead, curTail - 1);
-            curIndex++;
-            if (curIndex < msgList.size())
-            {
-                nextMsgLen = msgList[curIndex].len;
-            }
-            else
-            {
-                nextMsgLen = 0;
-            }
-            curHead = curTail;
-            curTail = curTail + nextMsgLen;
-        }
-        for (msgCon tempCon : msgList)
-        {
-            MsgMachine->ClientToConsole(tempCon.content);
+            cout << "Room is not exist or not open new" << endl;
+            return false;
         }
     }
     else
     {
-        //LogMsg(" 0 msg");
+        return false;
     }
-    ifQuestAllMsg = false;
+
 }
 
-
-void SingleClient::BeginMsgCheckThread()
+//-----------------------------------------------------//
+bool SingleClient::GetUserNameID()
 {
-    while (SingleClient::GetClientInstance()->ifKeepChatting == true)
+    GetInputString(userName, "Input Your User Name:");
+    return SetUserID();
+}
+
+bool SingleClient::SetUserID()
+{
+    // send cmd head
+    send(*clientSocket, CMD_REGI, CMD_LEN, 0);
+    // send name length
+    string nameLen = IntToStringID(userName.size());
+    send(*clientSocket, nameLen.c_str(), NUM_LEN, 0);
+    // send name
+    send(*clientSocket, userName.c_str(), userName.size(), 0);
+
+    if (GetMsgWithLen(NUM_LEN))
     {
-        SingleClient::GetClientInstance()->ifQuestAllMsg = true;
+        string result = CutMsgRegion(NUM_LEN);
+        userID = stoi(result);
+        return true;
+    }
+    else
+        return false;
+}
+
+//-----------------------------------------------------//
+void SingleClient::BeginChatToServer()
+{
+    ifKeepChatting = true;
+
+    recvThread = new thread(RecvThread);
+    recvThread->detach();
+
+    hearThread = new thread(HearThread);
+    hearThread->detach();
+
+    sendThread = new thread(SendThread);
+    sendThread->detach();
+}
+
+void SingleClient::RecvThread()
+{
+    SingleClient::GetClientInstance()->RecvMessageFromServer();
+    return;
+}
+void SingleClient::SendThread()
+{
+    SingleClient::GetClientInstance()->SendMessageToServer();
+    return;
+}
+void SingleClient::HearThread()
+{
+    SingleClient::GetClientInstance()->CheackHeartBagTime();
+    return;
+}
+
+void SingleClient::RecvMessageFromServer()
+{
+    while (ifKeepChatting)
+    {
+        if (GetMsgWithLen(CMD_LEN))
+        {
+            string cmdNews = CutMsgRegion(CMD_LEN);
+            if (cmdNews == CMD_SEND)
+            {
+                if (GetMsgWithLen(NUM_LEN))
+                {
+                    int msgLen = stoi(CutMsgRegion(NUM_LEN));
+                    if (GetMsgWithLen(msgLen))
+                    {
+                        msgList.push_back(CutMsgRegion(msgLen));
+                    }
+                }
+            }
+            else if (cmdNews != CMD_BEAT)
+            {
+                LogMsg("Message From Server is Worry :");
+                LogMsg(cmdNews);
+            }
+        }
+    }
+}
+void SingleClient::SendMessageToServer()
+{
+    while (ifKeepChatting)
+    {
+        if (ifSendMsg)
+        {
+            SendMessageToServer();
+        }
+        else if (ifHeartBag)
+        {
+            SendHeartBagToServer();
+        }
+    }
+}
+void SingleClient::CheackHeartBagTime()
+{
+    while (SingleClient::GetClientInstance()->ifKeepChatting)
+    {
+        SingleClient::GetClientInstance()->ifHeartBag = true;
         Sleep(3000);
     }
 }
+
+void SingleClient::SendMsgToServer()
+{
+    send(*clientSocket, CMD_SEND, CMD_LEN, 0);
+
+    string msgLen = IntToStringID(sendMsg->msgLen);
+    send(*clientSocket, msgLen.c_str(), msgLen.size(), 0);
+    send(*clientSocket, sendMsg->msg, sendMsg->msgLen, 0);
+
+    sendMsg->ClearMsg();
+    ifHeartBag = false;
+    ifSendMsg = false;
+}
+void SingleClient::SendHeartBagToServer()
+{
+    send(*clientSocket, CMD_BEAT, CMD_LEN, 0);
+    ifHeartBag = false;
+}
+
+//-----------------------------------------------------//
+bool SingleClient::GetMsgWithLen(int Len)
+{
+    while (curMsg.size() < Len)
+    {
+        char* tempID = new char[100]{ 0 };
+        int error = recv(*clientSocket, tempID, BUFFER_MAX_LENG, 0);
+        if (error == 0)
+            return false;
+        curMsg += tempID;
+    }
+    return true;
+}
+
+string SingleClient::CutMsgRegion(int Len)
+{
+    string result = string(curMsg, 0, Len);
+    curMsg = string(curMsg, Len, curMsg.size());
+    return result;
+}
+
+//--------------------------------------------------------------------------------------------//

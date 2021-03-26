@@ -1,54 +1,57 @@
 #include "MsgCheckPoint.h"
 
+#include "../../Common.h"
+
 #include "ConsoleCtr.h"
 #include "SingleClient.h"
-#include "../../Common.h"
+
+
+
 
 MsgCheckPoint* MsgCheckPoint::singleMsgCheck = nullptr;
 
-MsgCheckPoint* MsgCheckPoint::GetInstence()
+MsgCheckPoint* MsgCheckPoint::GetInstence(ConsoleCtr* Console, SingleClient* Client)
 {
 	if (singleMsgCheck == nullptr) {
-		singleMsgCheck = new MsgCheckPoint();
+		singleMsgCheck = new MsgCheckPoint(Console, Client);
+		Console->msgStation = singleMsgCheck;
 	}
 	return singleMsgCheck;
 }
 
-void MsgCheckPoint::ConsoleToClient(const string& Msg)
+MsgCheckPoint::MsgCheckPoint(ConsoleCtr* Console, SingleClient* Client) :console(Console), client(Client){}
+
+bool MsgCheckPoint::ConsoleToClient(const string& Msg)
 {
 	if (UserInputCheck(Msg)) {
 		strcpy(client->sendMsg->msg, Msg.c_str());
 		client->sendMsg->msgLen = Msg.size();
-		client->ifSendMessage = true;
+		client->ifSendMsg = true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
-void MsgCheckPoint::ClientToConsole(const string& Msg)
+bool MsgCheckPoint::ClientToConsole(string& Msg)
 {
-	ServerMsgCheck(Msg);
-	console->MsgList.push_back(Msg);
+	if (client->msgList.size() > 0)
+	{
+		Msg = client->msgList.front();
+		client->msgList.pop_front();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 
-}
-
-int MsgCheckPoint::ClientToClient(char *Msg)
-{
-	return atoi(Msg);
 }
 
 bool MsgCheckPoint::UserInputCheck(const string& Msg)
 {
-	if (StringBeginWith(Msg,CMD_HEAD)) {
-		string cmd = string(Msg,CMD_HEAD_LEN, Msg.size());
-		return false;
-	}
 	return true;
 }
 
-void MsgCheckPoint::ServerMsgCheck(const string& Msg)
-{
-}
-
-void MsgCheckPoint::CMDMsgCheck(const string& Msg)
-{
-}
 

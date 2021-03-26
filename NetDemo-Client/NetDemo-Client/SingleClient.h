@@ -1,10 +1,11 @@
 #pragma once
 
 #include <winsock2.h>
-#include "ConsoleCtr.h"
-#include <vector>
+#include <deque>
 #include <thread>
+#include <string>
 
+using namespace std;
 
 class Msg;
 class MsgCheckPoint;
@@ -13,54 +14,74 @@ class SingleClient
 {
 #pragma region single mode function
 private:
-	SingleClient(char* IPAddr = nullptr, int port = 0);
+	SingleClient(string IPAddr = nullptr, int port = 0);
 	static SingleClient* singleClient;
 public:
-	static SingleClient* GetClientInstance(char* IPAddr = nullptr, int port = 0);
+	static SingleClient* GetClientInstance();
 	~SingleClient();
+
+	void Begin();
+	void End();
 #pragma endregion
 
-#pragma region normal connect
-private:
-	sockaddr_in serverAddr;
-	SOCKET* clientSocket;
-	MsgCheckPoint* MsgMachine;
+#pragma region client common properties
 public:
 	Msg* sendMsg;
-	void BeginChatting();
-	bool ConnectToServer();
-	void SendToServer();
-	void CloseSocket();
-#pragma endregion
+	string curMsg;
 
-
-#pragma region message send function
-public:
-	void UserLogin();
-	bool ifSendMessage;
-	bool ifQuestAllMsg;
 private:
+	int roomNum;
 	int userID;
-	string userIDS;
 	string userName;
-
-	void GetUserID();
-	void GetAllMessage();
-	void SendMsgToServer();
+	sockaddr_in serverAddr;
+	SOCKET* clientSocket;
 #pragma endregion
 
-#pragma region check msg thread
+#pragma region set room number
 public:
-	bool ifKeepChatting;
+	bool GetRoomNumber();
 private:
-	thread* msgCheckThread;
-	static void BeginMsgCheckThread();
+	bool LinkToServer();
+	bool LinkToRoom();
 #pragma endregion
 
+#pragma region set user name
+public:
+	bool GetUserNameID();
 
-};
+private:
+	bool SetUserID();
 
-struct msgCon{
-	int len;
-	string content;
+#pragma endregion
+
+#pragma region begin chatting
+public:
+	void BeginChatToServer();
+
+	void RecvMessageFromServer();
+	void SendMessageToServer();
+	void CheackHeartBagTime();
+
+	bool ifHeartBag;
+	bool ifSendMsg;
+	bool ifKeepChatting;
+
+	deque<string> msgList;
+private:
+	thread* recvThread;
+	thread* hearThread;
+	thread* sendThread;
+
+	static void RecvThread();
+	static void HearThread();
+	static void SendThread();
+
+	void SendMsgToServer();
+	void SendHeartBagToServer();
+#pragma endregion
+
+#pragma region tools function
+	bool GetMsgWithLen(int Len);
+	string CutMsgRegion(int Len);
+#pragma endregion
 };

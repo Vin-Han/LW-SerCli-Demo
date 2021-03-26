@@ -2,15 +2,14 @@
 
 #include "MsgCheckPoint.h"
 #include "../../Common.h"
-
 #include <conio.h>
-#include <string>
 
 ConsoleCtr* ConsoleCtr::clientConsole = nullptr;
 
 ConsoleCtr::ConsoleCtr()
 {
 	userInput = "";
+	serverInput = "";
 }
 
 ConsoleCtr::~ConsoleCtr()
@@ -26,56 +25,39 @@ ConsoleCtr* ConsoleCtr::GetInstance()
 	return clientConsole;
 }
 
-//--------------------------------------------------------------------------------------------//
-void ConsoleCtr::BeginInputThread()
+void ConsoleCtr::Begin()
 {
 	ifReceiveInput = true;
-	msgCheck = MsgCheckPoint::GetInstence();
-	inputThread = new thread(BuildThread);
-	inputThread->detach();
+	PutMessageToConsole();
 }
 
-void ConsoleCtr::CloseInputThread()
+void ConsoleCtr::Close()
 {
 	ifReceiveInput = false;
 }
 
-void ConsoleCtr::BuildThread()
-{
-	ConsoleCtr::GetInstance()->PutMessageToConsole();
-	return;
-}
-
-//--------------------------------------------------------------------------------------------//
 void ConsoleCtr::PutMessageToConsole()
 {
 	while (ifReceiveInput)
 	{
 		if (_kbhit()) {
 			getline(cin, userInput);
-			msgCheck->ConsoleToClient(userInput);
+			msgStation->ConsoleToClient(userInput);
 			ClearUserInput();
 		}
-		while (MsgList.size() > 0)
+		while (msgStation->ClientToConsole(serverInput))
 		{
-			cout << MsgList.front() << "\n";
-			MsgList.pop_front();
+			cout << serverInput << "\n";
 		}
 	}
 	return;
 }
 
-//--------------------------------------------------------------------------------------------//
 void ConsoleCtr::ClearUserInput()
-{
-	SetCursorToLastLine();
-	cout << string(userInput.size(), ' ') << "\r";
-}
-
-void ConsoleCtr::SetCursorToLastLine()
 {
 	int X, Y;
 	GetConsoleXY(X, Y);
 	SetConSoleXY(0, Y - 1);
+	cout << string(userInput.size(), ' ') << "\r";
+	userInput = "";
 }
-

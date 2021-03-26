@@ -2,7 +2,7 @@
 #include "SingleClient.h"
 #include "ConsoleCtr.h"
 #include "MsgCheckPoint.h"
-#include "../../Common.h"
+#include <winsock2.h>
 
 int main() {
 
@@ -13,17 +13,14 @@ int main() {
 
 
     ConsoleCtr* console = ConsoleCtr::GetInstance();
-    SingleClient* client = SingleClient::GetClientInstance(IP, 1234);
-    MsgCheckPoint* msgMAchine = MsgCheckPoint::GetInstence();
+    SingleClient* client = SingleClient::GetClientInstance();
+    MsgCheckPoint* msgMAchine = MsgCheckPoint::GetInstence(console,client);
 
-    msgMAchine->SetClient(client);
-    msgMAchine->SetConsole(console);
+    client->Begin();
+    console->Begin();
 
-    client->UserLogin();
-    console->BeginInputThread();
-    client->BeginChatting();
-
-
+    client->End();
+    console->Close();
 
     WSACleanup();
     return 0;
