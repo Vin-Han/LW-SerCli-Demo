@@ -96,7 +96,7 @@ bool SingleClient::LinkToRoom()
     if (GetMsgWithLen(CMD_LEN))
     {
         string result = CutMsgRegion(CMD_LEN);
-        if (StringBeginWith(result, CMD_OPEN))
+        if (result == CMD_OPEN)
             return true;
         else
         {
@@ -193,6 +193,7 @@ void SingleClient::RecvMessageFromServer()
                 LogMsg(cmdNews);
             }
         }
+        curMsg = "";
     }
 }
 void SingleClient::SendMessageToServer()
@@ -201,7 +202,7 @@ void SingleClient::SendMessageToServer()
     {
         if (ifSendMsg)
         {
-            SendMessageToServer();
+            SendContentToServer();
         }
         else if (ifHeartBag)
         {
@@ -218,7 +219,7 @@ void SingleClient::CheackHeartBagTime()
     }
 }
 
-void SingleClient::SendMsgToServer()
+void SingleClient::SendContentToServer()
 {
     send(*clientSocket, CMD_SEND, CMD_LEN, 0);
 

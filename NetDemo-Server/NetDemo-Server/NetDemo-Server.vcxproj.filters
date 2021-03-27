@@ -18,20 +18,20 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SingleServer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ConsoleCtr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ChattingRoom.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SingleServer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -39,6 +39,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ServerMain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ChattingRoom.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,5 @@
 #pragma comment (lib, "ws2_32.lib")
-#include "SingleServer.h"
+
 #include "ServerMain.h"
 #include "../../Common.h"
 
@@ -9,14 +9,8 @@ int main() {
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     ServerMain* serverMain = ServerMain::GetInstance();
-    SingleServer* server = new SingleServer(1);
 
-    serverMain->BeginListen(1234);
-
-
-    server->OpenChattingRoom();
-
-    delete server;
+    serverMain->Begin();
 
     WSACleanup();
 

@@ -1,8 +1,12 @@
 #pragma once
 #include "../../Common.h"
 #include <winsock2.h>
+#include <vector>
+#include <thread>
 
-enum CMDList;
+using namespace std;
+
+class ChattingRoom;
 
 class ServerMain
 {
@@ -15,31 +19,46 @@ private:
 	ServerMain();
 #pragma endregion
 
-#pragma region server socket
+#pragma region begin server socket thread
 public:
-	void BeginListen(int port);
-	static SOCKET serverSocket;
+	void Begin();
+	void Close();
+
+	static void ListenThread();
+
+	void BeginListenThread();
+
 private:
+	int serverPort;
+	thread* listenThread;
+	SOCKET serverSocket;
 	sockaddr_in serverAddr;
-	void SetServerSocket(int port);
+
+	void SetServerSocket();
 	void BindServerToPort();
 	void BeginToListen();
 #pragma endregion
 
-#pragma region command List
-public:
-	CMDList curCMD;
 
+#pragma region receive new socket
+
+private:
+	SOCKET tempSocket;
+	string tempMsg;
+
+	void GetUserRoomNum();
+	void RegisteUser(int roomIndex);
 #pragma endregion
 
 
+#pragma region chatting rooom
+private:
+	vector<ChattingRoom*> roomList;
+#pragma endregion
 
-};
+#pragma region tool function
+	bool GetMsgWithLen(int Len);
+	string CutMsgRegion(int Len);
+#pragma endregion
 
-enum CMDList
-{
-	None = 0,
-	OpenRoom = 1,
-	CloseRoom = 2,
-	PauseRoom = 3,
 };

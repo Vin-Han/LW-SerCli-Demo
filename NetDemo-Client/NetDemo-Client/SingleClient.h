@@ -76,7 +76,7 @@ private:
 	static void HearThread();
 	static void SendThread();
 
-	void SendMsgToServer();
+	void SendContentToServer();
 	void SendHeartBagToServer();
 #pragma endregion
 
