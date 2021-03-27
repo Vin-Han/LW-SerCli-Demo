@@ -32,7 +32,6 @@ void Client::Begin()
 	sendThread = new thread(SendThread, this);
 	sendThread->detach();
 }
-
 void Client::Close()
 {
 	ifKeepConnect = false;
@@ -101,8 +100,11 @@ void Client::RecvClientMsg()
 			LogMsg(tempCMD);
 		}
 	}
+	else
+	{
+		Close();
+	}
 	clientMsg = "";
-
 
 }
 void Client::SendClientMsg()
@@ -110,19 +112,21 @@ void Client::SendClientMsg()
 	CheckCurPos();
 	if (ifSendMessage)
 	{
-		SendMsgToClient();
+		if (SendMsgToClient() == false)
+			Close();
 	}
 	else if (ifSendBeatBag)
 	{
-		SendBeatToClient();
+		if (SendBeatToClient() == false)
+			Close();
 	}
+
 }
 void Client::BeatClientMsg()
 {
 	ifSendBeatBag = true;
 	Sleep(3000);
 }
-
 
 void Client::CheckCurPos()
 {
@@ -131,25 +135,26 @@ void Client::CheckCurPos()
 		ifSendMessage = true;
 	}
 }
-void Client::SendMsgToClient()
+bool Client::SendMsgToClient()
 {
 	string fullMsg = roomLink->msgList[userCurPos];
-	send(userSocket, CMD_SEND, CMD_LEN, 0);
+	if (send(userSocket, CMD_SEND, CMD_LEN, 0) == -1)return false;
 
 	string msgLen = IntToStringID(fullMsg.size());
-	send(userSocket, msgLen.c_str(), NUM_LEN, 0);
-	send(userSocket, fullMsg.c_str(), fullMsg.size(), 0);
+	if (send(userSocket, msgLen.c_str(), NUM_LEN, 0) == -1)return false;
+	if (send(userSocket, fullMsg.c_str(), fullMsg.size(), 0) == -1)return false;
 
 	userCurPos++;
 	ifSendMessage = false;
 	ifSendBeatBag = false;
+	return true;
 }
-void Client::SendBeatToClient()
+bool Client::SendBeatToClient()
 {
-	send(userSocket, CMD_BEAT, CMD_LEN, 0);
+	if (send(userSocket, CMD_BEAT, CMD_LEN, 0) == -1)return false;
 	ifSendBeatBag = false;
+	return true;
 }
-
 
 bool Client::GetMsgWithLen(int Len)
 {
@@ -163,7 +168,6 @@ bool Client::GetMsgWithLen(int Len)
 	}
 	return true;
 }
-
 string Client::CutMsgRegion(int Len)
 {
 	string result = string(clientMsg, 0, Len);

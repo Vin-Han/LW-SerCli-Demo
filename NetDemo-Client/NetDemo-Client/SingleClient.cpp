@@ -60,10 +60,12 @@ void SingleClient::Begin()
     BeginChatToServer();
 }
 
-void SingleClient::End()
+void SingleClient::Close()
 {
+    ifKeepChatting = false;
     closesocket(*clientSocket);
     delete clientSocket;
+    delete this;
 }
 
 //-----------------------------------------------------//

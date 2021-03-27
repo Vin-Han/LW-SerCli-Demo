@@ -3,6 +3,9 @@
 #include <string>
 using namespace std;
 
+#define LINK_CMD_LEN 9
+#define CLOSE_LINK "CloseLink"
+
 class ConsoleCtr;
 class SingleClient;
 

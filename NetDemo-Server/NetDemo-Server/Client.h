@@ -12,23 +12,26 @@ class ChattingRoom;
 
 class Client
 {
+#pragma region normal functions
 public:
 	Client(int RoomID, int ID, string Name, SOCKET Socket);
 	~Client();
 
 	void Begin();
 	void Close();
+#pragma endregion
 
+#pragma region properties
+public:
 	ChattingRoom* roomLink;
-
+	SOCKET userSocket;
 	string userName;
 	int    userID;
-	SOCKET userSocket;
+
+private:
 	int    userRoom;
 	int    userCurPos;
-
-
-
+#pragma endregion
 
 #pragma region thread function
 public:
@@ -55,8 +58,8 @@ private:
 	void BeatClientMsg();
 
 	void CheckCurPos();
-	void SendMsgToClient();
-	void SendBeatToClient();
+	bool SendMsgToClient();
+	bool SendBeatToClient();
 #pragma endregion
 
 #pragma region tools function
@@ -64,6 +67,5 @@ private:
 	bool GetMsgWithLen(int Len);
 	string CutMsgRegion(int Len);
 #pragma endregion
-
 
 };

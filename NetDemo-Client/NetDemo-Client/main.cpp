@@ -19,7 +19,7 @@ int main() {
     client->Begin();
     console->Begin();
 
-    client->End();
+    client->Close();
     console->Close();
 
     WSACleanup();

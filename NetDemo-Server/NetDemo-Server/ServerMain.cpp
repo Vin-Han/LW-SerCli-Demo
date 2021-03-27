@@ -29,7 +29,6 @@ void ServerMain::Begin()
 
 	BeingCheckInput();
 }
-
 void ServerMain::Close()
 {
 	closesocket(serverSocket);
@@ -40,8 +39,6 @@ void ServerMain::ListenThread()
 	ServerMain::GetInstance()->BeginListenThread();
 	return;
 }
-
-
 void ServerMain::BeginListenThread()
 {
 	GetInputInt(&serverPort, "User Witch Port For Server:");
@@ -160,7 +157,6 @@ void ServerMain::StartRoom()
 	newRoom->ifOpen = true;
 	roomList.push_back(newRoom);
 }
-
 void ServerMain::CloseRoom()
 {
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
@@ -178,7 +174,6 @@ void ServerMain::CloseRoom()
 	cout << "Room is not exist now" << endl;
 	return;
 }
-
 void ServerMain::PauseRoom()
 {
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
@@ -192,7 +187,6 @@ void ServerMain::PauseRoom()
 		}
 	}
 }
-
 void ServerMain::ReuseRoom()
 {
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
@@ -207,7 +201,6 @@ void ServerMain::ReuseRoom()
 	}
 }
 
-
 //-----------------------------------------------------//
 bool ServerMain::GetMsgWithLen(int Len)
 {
@@ -221,7 +214,6 @@ bool ServerMain::GetMsgWithLen(int Len)
 	}
 	return true;
 }
-
 string ServerMain::CutMsgRegion(int Len)
 {
 	string result = string(tempMsg, 0, Len);
@@ -235,7 +227,6 @@ string ServerMain::CutCMDRegion(int Len)
 	cmdMsg = string(cmdMsg, Len, cmdMsg.size());
 	return result;
 }
-
 void ServerMain::CheckEmptyRoom()
 {
 	vector<ChattingRoom*>::iterator curPos = roomList.begin();

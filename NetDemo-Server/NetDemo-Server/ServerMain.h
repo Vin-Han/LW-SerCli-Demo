@@ -6,12 +6,10 @@
 #include <string>
 
 #define ROOM_CMD_LEN 9
-
 #define START_ROOM "StartRoom"
 #define CLOSE_ROOM "CloseRoom"
 #define PAUSE_ROOM "PauseRoom"
 #define REUSE_ROOM "ReuseRoom"
-
 
 using namespace std;
 
@@ -76,7 +74,6 @@ private:
 	void CloseRoom();
 
 #pragma endregion
-
 
 #pragma region tool function
 	bool GetMsgWithLen(int Len);

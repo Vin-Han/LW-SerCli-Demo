@@ -13,6 +13,7 @@ ChattingRoom::~ChattingRoom()
 
 void ChattingRoom::Close()
 {
+	CheckClientExist();
 	for (Client* tempClient : clientList)
 	{
 		tempClient->Close();
@@ -24,6 +25,7 @@ void ChattingRoom::Close()
 void ChattingRoom::RegisteUser(string userName,SOCKET userSocket)
 {
 	Client* newClient = nullptr;
+	CheckClientExist();
 	for (Client* tempClient : clientList)
 	{
 		if (tempClient->userName == userName)
@@ -40,5 +42,16 @@ void ChattingRoom::RegisteUser(string userName,SOCKET userSocket)
 
 	newClient->roomLink = this;
 	newClient->Begin();
+}
+
+void ChattingRoom::CheckClientExist()
+{
+	vector<Client*>::iterator curPos = clientList.begin();
+	for (; curPos != clientList.end(); curPos++)
+	{
+		if ((*curPos) == nullptr) {
+			curPos = clientList.erase(curPos);
+		}
+	}
 }
 

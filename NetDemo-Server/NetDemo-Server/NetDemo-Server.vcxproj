@@ -141,7 +141,6 @@
   <ItemGroup>
     <ClCompile Include="ChattingRoom.cpp" />
     <ClCompile Include="Client.cpp" />
-    <ClCompile Include="ConsoleCtr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ServerMain.cpp" />
   </ItemGroup>
@@ -149,7 +148,6 @@
     <ClInclude Include="..\..\Common.h" />
     <ClInclude Include="ChattingRoom.h" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="ConsoleCtr.h" />
     <ClInclude Include="ServerMain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -15,14 +15,14 @@ public:
 
 	void Close();
 
-
 	void RegisteUser(string userName,SOCKET userSocket);
 
 	bool ifOpen;
-
 	int roomID;
 
 	vector<Client*> clientList;
 	vector<string>  msgList;
 
+private:
+	void CheckClientExist();
 };

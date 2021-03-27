@@ -21,7 +21,7 @@ public:
 	~SingleClient();
 
 	void Begin();
-	void End();
+	void Close();
 #pragma endregion
 
 #pragma region client common properties

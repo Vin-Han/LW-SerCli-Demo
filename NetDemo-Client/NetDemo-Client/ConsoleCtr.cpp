@@ -34,6 +34,7 @@ void ConsoleCtr::Begin()
 void ConsoleCtr::Close()
 {
 	ifReceiveInput = false;
+	delete this;
 }
 
 void ConsoleCtr::PutMessageToConsole()

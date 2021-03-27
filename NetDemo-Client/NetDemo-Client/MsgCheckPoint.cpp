@@ -51,6 +51,11 @@ bool MsgCheckPoint::ClientToConsole(string& Msg)
 
 bool MsgCheckPoint::UserInputCheck(const string& Msg)
 {
+	if (Msg == CLOSE_LINK) 
+	{
+		client->Close();
+		console->Close();
+	}
 	return true;
 }
 
