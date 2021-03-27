@@ -13,6 +13,9 @@ public:
 	ChattingRoom(int RoomID);
 	~ChattingRoom();
 
+	void Close();
+
+
 	void RegisteUser(string userName,SOCKET userSocket);
 
 	bool ifOpen;

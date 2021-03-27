@@ -4,10 +4,21 @@
 
 ChattingRoom::ChattingRoom(int RoomID):roomID(RoomID)
 {
+	ifOpen = false;
 }
 
 ChattingRoom::~ChattingRoom()
 {
+}
+
+void ChattingRoom::Close()
+{
+	for (Client* tempClient : clientList)
+	{
+		tempClient->Close();
+	}
+	msgList.clear();
+	delete this;
 }
 
 void ChattingRoom::RegisteUser(string userName,SOCKET userSocket)

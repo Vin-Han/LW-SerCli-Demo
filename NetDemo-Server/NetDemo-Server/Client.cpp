@@ -37,6 +37,7 @@ void Client::Close()
 {
 	ifKeepConnect = false;
 	closesocket(userSocket);
+	delete this;
 }
 
 void Client::BeginRecv()
@@ -46,7 +47,6 @@ void Client::BeginRecv()
 		RecvClientMsg();
 	}
 }
-
 void Client::BeginSend()
 {
 	while (ifKeepConnect)
@@ -54,7 +54,6 @@ void Client::BeginSend()
 		SendClientMsg();
 	}
 }
-
 void Client::BeginBeat()
 {
 	while (ifKeepConnect)

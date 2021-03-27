@@ -14,31 +14,10 @@ using namespace std;
 #define USER_MSG_LEN 4
 #define COMMON_PORT 1240
 
-// --14-- --4-- // --num-- --len-- --len-- --msg-- --msg-- //
-#define GET_ALL_MSG "bytedance_work"
-#define GET_ALL_MSG_LEN 14
-
-// --14-- --4-- --name--//
-#define USER_LOGIN    "new_user_login"
-#define USER_LOGIN_LEN 14
-
-// --14-- --ID-- --Len-- --Msg-- //
-#define SEND_MSG      "msg_from_user_"
-#define SEND_MSG_LEN 14
-
-// --14-- --ID-- --Len-- --Msg-- //
-#define EMPTY_MSG	  "empty_message_"
-#define EMPTY_MSG_LEN 14
-
-#define CMD_HEAD "CMD:"
-#define CMD_HEAD_LEN 4
-
-
 // 网络协议包头 //
 #define CMD_LEN 8
 // 数字信息长度 //
 #define NUM_LEN 4
-
 
 // 进入聊天室
 static const char* CMD_ROOM = "intoroom";
