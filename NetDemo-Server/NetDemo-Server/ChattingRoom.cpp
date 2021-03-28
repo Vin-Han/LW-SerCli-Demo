@@ -26,15 +26,19 @@ void ChattingRoom::RegisteUser(string userName,SOCKET userSocket)
 {
 	Client* newClient = nullptr;
 	CheckClientExist();
-	for (Client* tempClient : clientList)
+
+	vector<Client*>::iterator tempCheck = clientList.begin();
+	for (; tempCheck < clientList.end(); tempCheck++)
 	{
-		if (tempClient->userName == userName)
-		{
-			tempClient->Close();
-			tempClient->userSocket = userSocket;
-			newClient = tempClient;
+		if ((*tempCheck)->userName == userName) {
+			(*tempCheck)->Close();
+			newClient = new Client(roomID, clientList.size(), userName, userSocket, (*tempCheck)->userCurPos);
+			delete (*tempCheck);
+			clientList.erase(tempCheck);
+			break;
 		}
 	}
+
 	if (newClient == nullptr) {
 		newClient = new Client(roomID, clientList.size(), userName, userSocket);
 		clientList.push_back(newClient);

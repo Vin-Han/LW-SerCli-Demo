@@ -24,6 +24,10 @@ ServerMain* ServerMain::GetInstance()
 //-----------------------------------------------------//
 void ServerMain::Begin()
 {
+	ifKeepListen = true;
+
+	GetInputInt(&serverPort, "Use Witch Port For Server:");
+
 	listenThread = new thread(ListenThread);
 	listenThread->detach();
 
@@ -41,7 +45,6 @@ void ServerMain::ListenThread()
 }
 void ServerMain::BeginListenThread()
 {
-	GetInputInt(&serverPort, "User Witch Port For Server:");
 	SetServerSocket();
 	BindServerToPort();
 	BeginToListen();
@@ -75,43 +78,53 @@ void ServerMain::BeginToListen()
 
 void ServerMain::GetUserRoomNum()
 {
-	tempSocket = accept(serverPort, (SOCKADDR*)&serverAddr, &SOCKET_ADDR_LENGTH);
+	tempSocket = accept(serverSocket, (SOCKADDR*)&serverAddr, &SOCKET_ADDR_LENGTH);
 	if (GetMsgWithLen(CMD_LEN)) 
 	{
 		if (CutMsgRegion(CMD_LEN) == CMD_ROOM) 
 		{
-			int roomNum = stoi(CutMsgRegion(NUM_LEN));
-			CheckEmptyRoom();
-			for (int i = 0; i < roomList.size(); i++)
+			if (GetMsgWithLen(NUM_LEN))
 			{
-				if (roomList[i]->roomID == roomNum)
+				int roomNum = stoi(CutMsgRegion(NUM_LEN));
+				CheckEmptyRoom();
+				for (int i = 0; i < roomList.size(); i++)
 				{
-					if (roomList[i]->ifOpen == false)
+					if (roomList[i]->roomID == roomNum)
 					{
-						send(tempSocket, CMD_CLOS, CMD_LEN, 0);
+						if (roomList[i]->ifOpen == false)
+						{
+							send(tempSocket, CMD_CLOS, CMD_LEN, 0);
+						}
+						else
+						{
+							send(tempSocket, CMD_OPEN, CMD_LEN, 0);
+							RegisteUser(i);
+						}
+						return;;
 					}
-					else
-					{
-						send(tempSocket, CMD_OPEN, CMD_LEN, 0);
-						RegisteUser(i);
-					}
-					return;;
 				}
+				send(tempSocket, CMD_CLOS, CMD_LEN, 0);
 			}
-			send(tempSocket, CMD_CLOS, CMD_LEN, 0);
 		}
 	}
 	tempMsg = "";
 }
 void ServerMain::RegisteUser(int roomIndex)
 {
-	if (GetMsgWithLen(NUM_LEN)) 
+	if (GetMsgWithLen(CMD_LEN)) 
 	{
-		int nameLen = stoi(CutMsgRegion(NUM_LEN));
-		if (GetMsgWithLen(nameLen))
+		string tempCMD = CutMsgRegion(CMD_LEN);
+		if (tempCMD == CMD_REGI)
 		{
-			string userName = CutMsgRegion(nameLen);
-			roomList[roomIndex]->RegisteUser(userName,tempSocket);
+			if (GetMsgWithLen(NUM_LEN))
+			{
+				int nameLen = stoi(CutMsgRegion(NUM_LEN));
+				if (GetMsgWithLen(nameLen))
+				{
+					string userName = CutMsgRegion(nameLen);
+					roomList[roomIndex]->RegisteUser(userName, tempSocket);
+				}
+			}
 		}
 	}
 }
@@ -132,17 +145,30 @@ void ServerMain::BeingCheckInput()
 		}
 		else if (cmdType == REUSE_ROOM)
 		{
-			StartRoom();
+			ReuseRoom();
 		}
 		else if (cmdType == CLOSE_ROOM)
 		{
 			CloseRoom();
+		}
+		else if (cmdType == EXITSERVER)
+		{
+			OutServer();
+		}
+		else
+		{
+			cout << "Can't Tecogine This CMD" << endl;
 		}
 	}
 }
 
 void ServerMain::StartRoom()
 {
+	if (CheckListNumForCMD() == false)
+	{
+		cout << "Room Number is worry" << endl;
+		return;
+	}
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
 	CheckEmptyRoom();
 	for (ChattingRoom* tempRoom : roomList)
@@ -159,6 +185,11 @@ void ServerMain::StartRoom()
 }
 void ServerMain::CloseRoom()
 {
+	if (CheckListNumForCMD() == false)
+	{
+		cout << "Room Number is worry" << endl;
+		return;
+	}
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
 	CheckEmptyRoom();
 
@@ -176,6 +207,11 @@ void ServerMain::CloseRoom()
 }
 void ServerMain::PauseRoom()
 {
+	if (CheckListNumForCMD() == false)
+	{
+		cout << "Room Number is worry" << endl;
+		return;
+	}
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
 	CheckEmptyRoom();
 	for (ChattingRoom* tempRoom : roomList)
@@ -189,6 +225,11 @@ void ServerMain::PauseRoom()
 }
 void ServerMain::ReuseRoom()
 {
+	if (CheckListNumForCMD() == false)
+	{
+		cout << "Room Number is worry" << endl;
+		return;
+	}
 	int roomNum = stoi(CutCMDRegion(NUM_LEN));
 	CheckEmptyRoom();
 	for (ChattingRoom* tempRoom : roomList)
@@ -199,6 +240,10 @@ void ServerMain::ReuseRoom()
 			return;
 		}
 	}
+}
+void ServerMain::OutServer()
+{
+	exit(0);
 }
 
 //-----------------------------------------------------//
@@ -227,6 +272,15 @@ string ServerMain::CutCMDRegion(int Len)
 	cmdMsg = string(cmdMsg, Len, cmdMsg.size());
 	return result;
 }
+bool ServerMain::CheckListNumForCMD()
+{
+	if (cmdMsg.size() < 4)
+	{
+		return false;
+	}
+	return true;
+}
+
 void ServerMain::CheckEmptyRoom()
 {
 	vector<ChattingRoom*>::iterator curPos = roomList.begin();
@@ -238,3 +292,4 @@ void ServerMain::CheckEmptyRoom()
 		}
 	}
 }
+

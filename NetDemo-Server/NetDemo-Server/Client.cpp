@@ -2,9 +2,8 @@
 
 #include "ChattingRoom.h"
 
-Client::Client(int RoomID, int ID, string Name, SOCKET Socket):userRoom(RoomID),userID(ID),userName(Name),userSocket(Socket)
+Client::Client(int RoomID, int ID, string Name, SOCKET Socket, int curPos):userRoom(RoomID),userID(ID),userName(Name),userSocket(Socket), userCurPos(curPos)
 {
-	userCurPos = -1;
 	{
 		setsockopt(userSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&MAX_RECV_TIME, sizeof(int));
 		setsockopt(userSocket, SOL_SOCKET, SO_SNDTIMEO, (char*)&MAX_SEND_TIME, sizeof(int));
@@ -13,6 +12,9 @@ Client::Client(int RoomID, int ID, string Name, SOCKET Socket):userRoom(RoomID),
 	clientMsg = "";
 
 	ifKeepConnect = false;
+	ifSendMessage = false;
+	ifSendBeatBag = false;
+	ifFirstClose = true;
 }
 
 Client::~Client()
@@ -31,34 +33,18 @@ void Client::Begin()
 
 	sendThread = new thread(SendThread, this);
 	sendThread->detach();
+
+	beatThread = new thread(BeatThread, this);
+	beatThread->detach();
 }
 void Client::Close()
 {
+	if (ifFirstClose)
+	{
+		ifFirstClose = false;
+	}
 	ifKeepConnect = false;
 	closesocket(userSocket);
-	delete this;
-}
-
-void Client::BeginRecv()
-{
-	while (ifKeepConnect)
-	{
-		RecvClientMsg();
-	}
-}
-void Client::BeginSend()
-{
-	while (ifKeepConnect)
-	{
-		SendClientMsg();
-	}
-}
-void Client::BeginBeat()
-{
-	while (ifKeepConnect)
-	{
-		BeatClientMsg();
-	}
 }
 
 void Client::RecvThread(Client* client)
@@ -77,7 +63,29 @@ void Client::BeatThread(Client* client)
 	return;
 }
 
-void Client::RecvClientMsg()
+void Client::BeginRecv()
+{
+	while (ifKeepConnect)
+	{
+		if (RecvClientMsg() == false)ifKeepConnect = false;
+	}
+}
+void Client::BeginSend()
+{
+	while (ifKeepConnect)
+	{
+		if (SendClientMsg() == false)ifKeepConnect = false;
+	}
+}
+void Client::BeginBeat()
+{
+	while (ifKeepConnect)
+	{
+		BeatClientMsg();
+	}
+}
+
+bool Client::RecvClientMsg()
 {
 	if (GetMsgWithLen(CMD_LEN))
 	{
@@ -103,24 +111,30 @@ void Client::RecvClientMsg()
 	else
 	{
 		Close();
+		return false;
 	}
 	clientMsg = "";
-
+	return true;
 }
-void Client::SendClientMsg()
+bool Client::SendClientMsg()
 {
 	CheckCurPos();
 	if (ifSendMessage)
 	{
-		if (SendMsgToClient() == false)
+		if (SendMsgToClient() == false) {
 			Close();
+			return false;
+		}
+
 	}
 	else if (ifSendBeatBag)
 	{
-		if (SendBeatToClient() == false)
+		if (SendBeatToClient() == false) {
 			Close();
+			return false;
+		}
 	}
-
+	return true;
 }
 void Client::BeatClientMsg()
 {
@@ -162,7 +176,7 @@ bool Client::GetMsgWithLen(int Len)
 	{
 		char* tempID = new char[100]{ 0 };
 		int error = recv(userSocket, tempID, BUFFER_MAX_LENG, 0);
-		if (error == 0)
+		if (error == -1 )
 			return false;
 		clientMsg += tempID;
 	}

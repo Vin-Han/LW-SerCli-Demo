@@ -10,6 +10,7 @@
 #define CLOSE_ROOM "CloseRoom"
 #define PAUSE_ROOM "PauseRoom"
 #define REUSE_ROOM "ReuseRoom"
+#define EXITSERVER "OutServer"
 
 using namespace std;
 
@@ -72,7 +73,7 @@ private:
 	void PauseRoom();
 	void ReuseRoom();
 	void CloseRoom();
-
+	void OutServer();
 #pragma endregion
 
 #pragma region tool function
@@ -80,8 +81,10 @@ private:
 	string CutMsgRegion(int Len);
 
 	string CutCMDRegion(int Len);
+	bool CheckListNumForCMD();
 
 	void CheckEmptyRoom();
+
 #pragma endregion
 
 };

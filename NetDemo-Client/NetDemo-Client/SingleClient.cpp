@@ -5,6 +5,7 @@
 #include <conio.h>
 #include <algorithm>
 #include <winsock2.h>
+#include <cstdlib>
 
 SingleClient* SingleClient::singleClient = nullptr;
 
@@ -45,6 +46,7 @@ SingleClient::SingleClient(string IPAddr, int port)
     ifSendMsg = false;
     ifHeartBag = false;
 
+    curPos = 0;
     msgList.clear();
     sendMsg = new Msg();
 }
@@ -55,8 +57,8 @@ SingleClient::~SingleClient()
 
 void SingleClient::Begin()
 {
-    GetRoomNumber();
-    GetUserNameID();
+    if (GetRoomNumber() == false) Close();
+    if (GetUserNameID() == false) Close();
     BeginChatToServer();
 }
 
@@ -65,7 +67,7 @@ void SingleClient::Close()
     ifKeepChatting = false;
     closesocket(*clientSocket);
     delete clientSocket;
-    delete this;
+    exit(0);
 }
 
 //-----------------------------------------------------//
@@ -74,7 +76,6 @@ bool SingleClient::GetRoomNumber()
     GetInputInt(&roomNum, "Which Room You Want To Enjoy:");
     return LinkToServer();
 }
-
 
 bool SingleClient::LinkToServer()
 {
@@ -132,8 +133,7 @@ bool SingleClient::SetUserID()
 
     if (GetMsgWithLen(NUM_LEN))
     {
-        string result = CutMsgRegion(NUM_LEN);
-        userID = stoi(result);
+        userID = stoi(CutMsgRegion(NUM_LEN));
         return true;
     }
     else
@@ -195,7 +195,7 @@ void SingleClient::RecvMessageFromServer()
                 LogMsg(cmdNews);
             }
         }
-        curMsg = "";
+        //curMsg = "";
     }
 }
 void SingleClient::SendMessageToServer()

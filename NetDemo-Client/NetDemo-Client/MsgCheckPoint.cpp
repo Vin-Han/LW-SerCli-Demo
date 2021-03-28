@@ -36,10 +36,10 @@ bool MsgCheckPoint::ConsoleToClient(const string& Msg)
 
 bool MsgCheckPoint::ClientToConsole(string& Msg)
 {
-	if (client->msgList.size() > 0)
+	if (client->curPos < client->msgList.size())
 	{
-		Msg = client->msgList.front();
-		client->msgList.pop_front();
+		Msg = client->msgList[client->curPos];
+		client->curPos++;
 		return true;
 	}
 	else

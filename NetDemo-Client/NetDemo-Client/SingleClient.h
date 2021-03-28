@@ -1,7 +1,7 @@
 #pragma once
 
 #include <winsock2.h>
-#include <deque>
+#include <vector>
 #include <thread>
 #include <string>
 
@@ -28,7 +28,7 @@ public:
 public:
 	Msg* sendMsg;
 	string curMsg;
-
+	int curPos;
 private:
 	int roomNum;
 	int userID;
@@ -66,7 +66,7 @@ public:
 	bool ifSendMsg;
 	bool ifKeepChatting;
 
-	deque<string> msgList;
+	vector<string> msgList;
 private:
 	thread* recvThread;
 	thread* hearThread;

@@ -94,29 +94,29 @@ static void SetConSoleXY(int X, int Y)
 }
 
 static void GetInputInt(int* target,const string& inforMsg) {
-	do
+	cout << inforMsg << endl;
+	cin >> *target;
+	while (cin.fail() == true)
 	{
-		{
-			cout << inforMsg << endl;
-			cin.clear();
-			cin.get();
-			cin.sync();
-		}
+		cout << inforMsg << endl;
+		cin.clear();
+		cin.get();
+		cin.sync();
 		cin >> *target;
-	} while (cin.fail() == false);
+	}
 }
 
 static void GetInputString(string& target, const string& inforMsg) {
-	do
+	cout << inforMsg << endl;
+	cin >> target;
+	while (cin.fail() == true)
 	{
-		{
-			cout << inforMsg << endl;
-			cin.clear();
-			cin.get();
-			cin.sync();
-		}
+		cout << inforMsg << endl;
+		cin.clear();
+		cin.get();
+		cin.sync();
 		cin >> target;
-	} while (cin.fail() == false);
+	}
 }
 
 static string IntToStringID(int ID, int len = 4)

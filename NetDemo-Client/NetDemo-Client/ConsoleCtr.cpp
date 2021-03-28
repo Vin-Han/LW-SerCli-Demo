@@ -39,9 +39,12 @@ void ConsoleCtr::Close()
 
 void ConsoleCtr::PutMessageToConsole()
 {
+	cin.get();
 	while (ifReceiveInput)
 	{
 		if (_kbhit()) {
+			cin.clear(); 
+			cin.sync();
 			getline(cin, userInput);
 			msgStation->ConsoleToClient(userInput);
 			ClearUserInput();
@@ -59,6 +62,6 @@ void ConsoleCtr::ClearUserInput()
 	int X, Y;
 	GetConsoleXY(X, Y);
 	SetConSoleXY(0, Y - 1);
-	cout << string(userInput.size(), ' ') << "\r";
+	cout << string(userInput.size()+1, ' ') << "\r";
 	userInput = "";
 }
